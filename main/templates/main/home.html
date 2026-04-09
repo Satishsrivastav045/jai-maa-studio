@@ -1,0 +1,937 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bhadrakali Studio</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      color: white;
+      background: black;
+    }
+    /* 💬 CHAT BUTTON LEFT SIDE */
+#chat-btn {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  background: linear-gradient(45deg, #25D366, #1ebe5d);
+  color: white;
+  padding: 15px 22px;
+  border-radius: 50px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 0 15px rgba(0,0,0,0.5);
+  z-index: 999;
+  animation: pulse 1.5s infinite;
+}
+
+#chat-btn:hover {
+  animation: none;
+  transform: scale(1.1);
+}
+
+/* 💬 CHATBOX */
+#chatbox {
+  position: fixed;
+  bottom: 80px;
+  left: 20px;
+  width: 300px;
+  background: #111;
+  border-radius: 10px;
+  display: none;
+  overflow: hidden;
+  z-index: 999;
+}
+
+/* HEADER */
+#chat-header {
+  background: gold;
+  color: black;
+  padding: 10px;
+  font-weight: bold;
+}
+
+/* BODY */
+#chat-body {
+  height: 250px;
+  overflow-y: auto;
+  padding: 10px;
+  word-wrap: break-word;
+}
+
+/* INPUT */
+#chat-input {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  outline: none;
+  box-sizing: border-box; 
+}
+
+    /* HERO */
+    .hero {
+      position: relative;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .hero video {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .overlay {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+    }
+
+    .content {
+      position: relative;
+      z-index: 2;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 60px;
+    }
+
+    .gold {
+      color: gold;
+    }
+
+    p {
+      color: #ccc;
+      margin-top: 15px;
+      font-size: 18px;
+    }
+
+    .btn {
+      margin-top: 25px;
+      padding: 12px 25px;
+      border-radius: 30px;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      transition: 0.3s;
+    }
+
+    .btn-primary {
+      background: gold;
+      color: black;
+    }
+
+    .btn-primary:hover {
+      transform: scale(1.05);
+    }
+
+    .btn-outline {
+      border: 1px solid white;
+      background: transparent;
+      color: white;
+    }
+
+    .btn-outline:hover {
+      background: white;
+      color: black;
+    }
+
+    .buttons {
+      margin-top: 20px;
+    }
+    .booking {
+  padding: 80px 20px;
+  text-align: center;
+  background: #0a0a0a;
+}
+
+.booking h2 {
+  font-size: 35px;
+  margin-bottom: 20px;
+}
+
+.booking form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-width: 400px;
+  margin: auto;
+}
+
+.booking input {
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+}
+
+.booking button {
+  padding: 12px;
+  background: gold;
+  color: black;
+  border: none;
+  border-radius: 30px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+    /* SERVICES */
+    .services {
+      padding: 80px 20px;
+      text-align: center;
+      background: #0a0a0a;
+    }
+
+    .services h2 {
+      font-size: 40px;
+      margin-bottom: 40px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    .card {
+      padding: 25px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 15px;
+      transition: 0.3s;
+    }
+
+    .card:hover {
+      transform: scale(1.05);
+      background: rgba(255,255,255,0.1);
+    }
+    .gallery {
+  padding: 80px 20px;
+  text-align: center;
+  background: black;
+}
+
+.gallery h2 {
+  font-size: 40px;
+  margin-bottom: 40px;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+  max-width: 1100px;
+  margin: auto;
+}
+
+.gallery-grid img {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  border-radius: 15px;
+  transition: 0.4s;
+}
+
+.gallery-grid img:hover {
+  transform: scale(1.05);
+}
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  padding-top: 50px;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.9);
+}
+
+.modal img {
+  display: block;
+  margin: auto;
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 10px;
+}
+     .youtube {
+  padding: 80px 20px;
+  text-align: center;
+  background: #0a0a0a;
+}
+.packages {
+  padding: 80px 20px;
+  text-align: center;
+  background: #0a0a0a;
+}
+
+.package-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  max-width: 1100px;
+  margin: auto;
+}
+
+.package-card {
+  padding: 30px;
+  border-radius: 15px;
+  background: rgba(255,255,255,0.05);
+  transition: 0.3s;
+}
+
+.package-card:hover {
+  transform: translateY(-10px);
+}
+
+.package-card h3 {
+  font-size: 24px;
+}
+
+.package-card h4 {
+  color: gold;
+  margin-top: 10px;
+}
+
+.highlight {
+  background: gold;
+  color: black;
+}
+/* =========================
+   🔥 TESTIMONIAL SECTION
+========================= */
+.testimonials {
+  padding: 80px 20px;
+  text-align: center;
+  background: linear-gradient(180deg, #0a0a0a, #111);
+}
+
+/* =========================
+   GRID
+========================= */
+.testi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 25px;
+  max-width: 1100px;
+  margin: auto;
+}
+
+/* =========================
+   CARD
+========================= */
+.testi-card {
+  padding: 25px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 15px;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 🔥 glowing border effect */
+.testi-card::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, gold, transparent, gold);
+  transform: rotate(0deg);
+  opacity: 0;
+  transition: 0.5s;
+}
+
+.testi-card:hover::before {
+  opacity: 0.2;
+  transform: rotate(180deg);
+}
+
+/* hover effect */
+.testi-card:hover {
+  transform: translateY(-12px) scale(1.02);
+  box-shadow: 0 10px 25px rgba(255,215,0,0.2);
+}
+
+/* =========================
+   TEXT
+========================= */
+.testi-card p {
+  font-style: italic;
+  line-height: 1.6;
+  color: #ddd;
+}
+
+/* name */
+.testi-card h4 {
+  margin-top: 15px;
+  color: gold;
+  font-weight: bold;
+}
+
+/* rating */
+.testi-card span {
+  display: block;
+  margin-top: 5px;
+  color: #ffcc00;
+}
+
+/* =========================
+   MOBILE FIX
+========================= */
+@media (max-width: 500px) {
+  .testimonials {
+    padding: 50px 10px;
+  }
+}
+
+.youtube h2 {
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+
+.youtube p {
+  color: #aaa;
+  margin-bottom: 30px;
+}
+
+.video-box {
+  max-width: 900px;
+  margin: auto;
+}
+
+.video-box iframe {
+  width: 100%;
+  height: 500px;
+  border-radius: 15px;
+}
+     .contact {
+  padding: 80px 20px;
+  text-align: center;
+  background: black;
+}
+
+.contact h2 {
+  font-size: 35px;
+  margin-bottom: 20px;
+}
+
+.contact p {
+  color: #ccc;
+  margin: 5px;
+}
+
+.contact-btn {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 12px 25px;
+  background: gold;
+  color: black;
+  border-radius: 30px;
+  text-decoration: none;
+  font-weight: bold;
+}
+    /* WHATSAPP BUTTON */
+   .whatsapp {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: linear-gradient(45deg, #25D366, #1ebe5d);
+  color: white;
+  padding: 15px 22px;
+  border-radius: 50px;
+  font-weight: bold;
+  text-decoration: none;
+  box-shadow: 0 0 15px rgba(0,0,0,0.5);
+  z-index: 999;
+
+  animation: pulse 1.5s infinite;
+}
+
+/* 🔥 Animation */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7);
+  }
+  70% {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 15px rgba(37, 211, 102, 0);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.whatsapp:hover {
+  animation: none;
+  transform: scale(1.1);
+}
+
+  </style>
+
+</head>
+
+<body>
+
+  <!-- HERO -->
+  <section class="hero">
+
+    <video id="sliderVideo" autoplay muted loop></video>
+
+    <div class="overlay"></div>
+
+    <div class="content">
+
+      <h1>
+        Jai Maa <span class="gold">Bhadrakali</span> Studio
+      </h1>
+
+      <p>
+        From Sacred Kathas to Timeless Memories — We Capture Every Moment.
+      </p>
+
+      <div class="buttons">
+        <button class="btn btn-primary">🎬 Book Now</button>
+        <button class="btn btn-outline">📸 View Work</button>
+      </div>
+
+    </div>
+
+  </section>
+
+ <!-- SERVICES -->
+<section class="services">
+
+  <h2>Our Services</h2>
+
+  <div class="grid">
+
+    <div class="card" onclick="loadCategory('prewedding')">Pre-Wedding Shoot</div>
+
+    <div class="card" onclick="loadCategory('candid')">Candid Photography</div>
+
+    <div class="card" onclick="loadCategory('fineart')">Fine Art / Editorial</div>
+
+    <div class="card" onclick="loadCategory('cinematic')">Cinematic Highlights</div>
+
+    <div class="card" onclick="loadCategory('traditional')">Traditional Video</div>
+
+    <div class="card" onclick="loadCategory('katha')">Live Katha Streaming</div>
+
+    <div class="card" onclick="loadCategory('album')">Wedding Album Design</div>
+
+    <div class="card">All Types of Photography</div>
+
+  </div>
+
+  <p style="margin-top: 30px;">
+    Packages are customized based on your requirements & budget.
+  </p>
+
+</section>
+  <!-- GALLERY -->
+  <section class="gallery">
+  
+    <h2>Our Work</h2>
+  
+    <div class="gallery-grid">
+    
+      {% for img in images %}
+      <img src="{{ img.image.url }}" onclick="openModal(this.src)" />
+      {% empty %}
+      <p>No images uploaded yet</p>
+      {% endfor %}
+    
+    </div>
+  
+  </section>
+  <!-- IMAGE VIEWER -->
+<div id="imageModal" class="modal" onclick="closeModal()">
+  <img id="modalImg">
+</div>
+  <!-- PACKAGES -->
+<section class="packages">
+
+  <h2>Our Packages</h2>
+
+  <div class="package-grid">
+
+    <div class="package-card">
+      <h3>Basic</h3>
+      <p>Photography Only</p>
+      <h4>₹25,000</h4>
+    </div>
+
+    <div class="package-card highlight">
+      <h3>Standard</h3>
+      <p>Photo + Video</p>
+      <h4>₹45,000</h4>
+    </div>
+
+    <div class="package-card">
+      <h3>Premium</h3>
+      <p>All Services + Drone + Album</p>
+      <h4>₹70,000</h4>
+    </div>
+
+  </div>
+
+</section>
+<!-- TESTIMONIALS -->
+<section class="testimonials">
+
+  <h2>What Our Clients Say</h2>
+
+  <div class="testi-grid">
+
+    {% for t in testimonials %}
+    <div class="testi-card">
+      <p>"{{ t.message }}"</p>
+      <h4>- {{ t.name }}</h4>
+      <span>⭐⭐⭐⭐⭐</span>
+    </div>
+    {% empty %}
+    <p style="color:white;">No reviews yet</p>
+    {% endfor %}
+
+  </div>
+
+  <!-- 🔥 FEEDBACK FORM -->
+  <div style="margin-top:40px; text-align:center;">
+    <h3>Give Your Feedback</h3>
+
+    <input type="text" id="fb-name" placeholder="Your Name"><br><br>
+
+    <textarea id="fb-message" placeholder="Your Feedback"></textarea><br><br>
+
+    <input type="number" id="fb-rating" min="1" max="5" value="5"><br><br>
+
+    <button onclick="submitFeedback()">Submit Feedback</button>
+  </div>
+
+</section>
+  <!-- YOUTUBE SECTION -->
+<section class="youtube">
+
+  <h2>Our Cinematic Work</h2>
+
+  <p>Watch our latest wedding films & live katha recordings</p>
+
+  <div class="video-box">
+    <a href="https://www.youtube.com/@arvindsrivastava9574
+ " target="_blank" class="btn btn-primary">
+      Visit Our YouTube Channel
+    </a>
+  </div>
+
+</section>
+<!-- BOOKING FORM -->
+<section class="booking">
+
+  <h2>Book Your Shoot</h2>
+
+  <form id="bookingForm" onsubmit="sendToWhatsApp(event)">
+
+    <input type="text" id="name" placeholder="Your Name" required>
+    <input type="tel" id="phone" placeholder="Phone Number" required>
+    <input type="text" id="event" placeholder="Event Type (Wedding / Katha)" required>
+   <input type="text" id="event_date" placeholder="Event Date" required>
+
+    <button type="submit">Send on WhatsApp</button>
+
+  </form>
+
+</section>
+<!-- CONTACT -->
+<section class="contact">
+
+  <h2>Contact Us</h2>
+
+  <p>📞 9936759702</p>
+  <p>📞 7393982811</p>
+  <p>📍 Pratapgarh, Uttar Pradesh</p>
+
+  <a href="https://wa.me/919936759702?text=Hello%20I%20want%20to%20book%20a%20shoot"
+   target="_blank"
+   class="whatsapp">
+   💬 Chat Now
+</a>
+
+</section>
+<!-- 💬 CHAT BUTTON -->
+<div id="chat-btn" onclick="toggleChat()">💬 Chat</div>
+
+<!-- 💬 CHATBOX -->
+<div id="chatbox">
+  <div id="chat-header">Wedding Assistant 🤖</div>
+  <div id="chat-body">
+    <p><b>Bot:</b> 🙏 Namaste! Ask about booking, wedding, travel.</p>
+  </div>
+  <input type="text" id="chat-input" placeholder="Type here..." onkeypress="handleChat(event)">
+</div>
+
+  <!-- WHATSAPP BUTTON -->
+  <a href="https://wa.me/919936759702?text=Hello%20I%20want%20to%20book%20a%20shoot"
+     target="_blank"
+     class="whatsapp">
+     💬 Book on WhatsApp
+  </a>
+<script>
+// =======================
+// ✅ WHATSAPP BOOKING
+// =======================
+function sendToWhatsApp(event) {
+  event.preventDefault();
+
+  let name = document.getElementById("name").value;
+  let phone = document.getElementById("phone").value;
+  let eventType = document.getElementById("event").value;
+  let event_date = document.getElementById("event_date").value;
+
+  fetch("/save-booking/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "X-CSRFToken": getCookie("csrftoken")
+    },
+   body: `name=${name}&phone=${phone}&event=${eventType}&event_date=${event_date}`
+  });
+
+  let message = `Hello, I want to book a shoot.\nName: ${name}\nPhone: ${phone}\nEvent: ${eventType}\nDate: ${event_date}`;
+  let url = `https://wa.me/919936759702?text=${encodeURIComponent(message)}`;
+
+  window.open(url, "_blank");
+}
+
+
+// =======================
+// ✅ CSRF TOKEN
+// =======================
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    let cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      let cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+
+// =======================
+// ✅ IMAGE MODAL
+// =======================
+function openModal(src) {
+  document.getElementById("imageModal").style.display = "block";
+  document.getElementById("modalImg").src = src;
+}
+
+function closeModal() {
+  document.getElementById("imageModal").style.display = "none";
+}
+
+
+// =======================
+// 🔥 VIDEO SLIDER (HOTSTAR STYLE)
+// =======================
+const videos = [
+  "/static/main/video1.mp4",
+  "/static/main/video2.mp4",
+  "/static/main/video3.mp4",
+  "/static/main/video4.mp4",
+  "/static/main/video5.mp4"
+];
+
+let videoIndex = 0;
+
+function changeVideo() {
+  const slider = document.getElementById("sliderVideo");
+  if (!slider) return;
+
+  slider.src = videos[videoIndex];
+  slider.load();
+  slider.play();
+
+  videoIndex = (videoIndex + 1) % videos.length;
+}
+
+setTimeout(() => {
+  changeVideo();
+  setInterval(changeVideo, 5000);
+}, 500);
+
+
+// =======================
+// 🔥 SERVICE CLICK → BACKEND DATA LOAD (FIXED)
+// =======================
+function loadCategory(category) {
+  fetch(`/category/${category}/`)
+    .then(res => res.json())
+    .then(data => {
+      const gallery = document.querySelector(".gallery-grid");
+      gallery.innerHTML = "";
+
+      if (data.length === 0) {
+        gallery.innerHTML = "<p style='color:white'>No images found</p>";
+        return;
+      }
+
+      data.forEach(item => {
+        // 🔥 FIX: image key use karo (url nahi)
+        if (item.image) {
+          let img = document.createElement("img");
+          img.src = item.image;
+          img.onclick = () => openModal(item.image);
+          gallery.appendChild(img);
+        }
+
+        // 🔥 VIDEO SUPPORT
+        if (item.video) {
+          let video = document.createElement("video");
+          video.src = item.video;
+          video.controls = true;
+          gallery.appendChild(video);
+        }
+      });
+    })
+    .catch(err => console.error("Error:", err));
+}
+
+
+// =======================
+// 💬 OPEN / CLOSE CHAT
+// =======================
+function toggleChat() {
+  let box = document.getElementById("chatbox");
+  box.style.display = (box.style.display === "block") ? "none" : "block";
+}
+
+
+// =======================
+// 🤖 AI CHATBOT (REAL)
+// =======================
+
+
+
+   async function handleChat(event) {
+
+  let input = document.getElementById("chat-input");
+
+  // 🔥 Enter + empty check
+  if (event.key === "Enter" && input.value.trim() !== "") {
+
+    let msg = input.value;
+    let msgLower = msg.toLowerCase();
+
+    input.value = ""; // ✅ clear input
+
+    let body = document.getElementById("chat-body");
+
+    body.innerHTML += `<p><b>You:</b> ${msg}</p>`;
+
+    let reply = "";
+
+    // =========================
+    // 🔥 FAST SMART REPLIES
+    // =========================
+    if (msgLower.includes("booking") || msgLower.includes("book")) {
+      reply = "📅 Booking ke liye WhatsApp button use kare.\nYou can book via WhatsApp.";
+    }
+    else if (msgLower.includes("price") || msgLower.includes("charge")) {
+      reply = "💰 Packages ₹25,000 se start hote hain.";
+    }
+    else if (msgLower.includes("foreign") || msgLower.includes("tourist")) {
+      reply = "🌍 We provide full Indian wedding experience including food, stay, travel & rituals.";
+    }
+    else if (msgLower.includes("food") || msgLower.includes("khana")) {
+      reply = "🍛 Indian traditional food available.";
+    }
+    else if (msgLower.includes("airport")) {
+      reply = "✈️ Airport pickup & drop available.";
+    }
+    else if (msgLower.includes("stay") || msgLower.includes("hotel")) {
+      reply = "🏨 Comfortable stay available.";
+    }
+
+    // =========================
+    // 🤖 AI FALLBACK (IMPORTANT)
+    // =========================
+    else {
+      try {
+        let res = await fetch("/chatbot/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ message: msg })
+        });
+
+        let data = await res.json();
+        reply = data.reply || "🙏 Ask about booking, wedding or price.";
+
+      } catch {
+        reply = "⚠️ Server error, try again.";
+      }
+    }
+
+    // =========================
+    // ✅ FINAL OUTPUT
+    // =========================
+    body.innerHTML += `<p><b>Bot:</b> ${reply}</p>`;
+    body.scrollTop = body.scrollHeight;
+  }
+}
+async function submitFeedback() {
+
+  let name = document.getElementById("fb-name").value;
+  let message = document.getElementById("fb-message").value;
+  let rating = document.getElementById("fb-rating").value;
+
+  if (!name || !message) {
+    alert("Please fill all fields");
+    return;
+  }
+
+  await fetch("/feedback/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      name: name,
+      message: message,
+      rating: rating
+    })
+  });
+
+  alert("✅ Feedback submitted! Waiting for approval.");
+
+  // clear form
+  document.getElementById("fb-name").value = "";
+  document.getElementById("fb-message").value = "";
+}
+</script>
+</body>
+</html>

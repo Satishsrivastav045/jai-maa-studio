@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Booking Dashboard</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #0a0a0a;
+      color: white;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .stats {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: #111;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      width: 200px;
+    }
+
+    .card h2 {
+      color: gold;
+    }
+
+    canvas {
+      background: #111;
+      padding: 10px;
+      border-radius: 10px;
+      display: block;
+      margin: auto;
+    }
+
+    table {
+      width: 100%;
+      margin-top: 30px;
+      border-collapse: collapse;
+      background: #111;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #333;
+    }
+
+    th {
+      background: gold;
+      color: black;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>📊 Booking Dashboard</h1>
+
+<div class="stats">
+  <div class="card">
+    <h2>{{ total }}</h2>
+    <p>Total</p>
+  </div>
+
+  <div class="card">
+    <h2>{{ today }}</h2>
+    <p>Today</p>
+  </div>
+</div>
+
+<h2 style="text-align:center;">📊 Booking Analytics</h2>
+
+<canvas id="bookingChart" width="400" height="200"></canvas>
+
+<table>
+  <tr>
+    <th>ID</th>
+    <th>Name</th>
+    <th>Phone</th>
+    <th>Event</th>
+    <th>Event date</th>
+
+    <th>Created</th>
+  </tr>
+
+  {% for b in bookings %}
+  <tr>
+    <td>{{ b.id }}</td>
+    <td>{{ b.name }}</td>
+    <td>{{ b.phone }}</td>
+    <td>{{ b.event }}</td>
+    <td>{{ b.event_date }}</td>
+    <td>{{ b.created_at }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<script>
+const labels = JSON.parse('{{ labels|escapejs }}');
+const counts = JSON.parse('{{ counts|escapejs }}');
+
+console.log(labels, counts); // debug
+
+const ctx = document.getElementById('bookingChart');
+
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: labels,
+    datasets: [{
+      label: 'Bookings',
+      data: counts,
+      backgroundColor: 'gold'
+    }]
+  }
+});
+</script>
+
+</body>
+</html>

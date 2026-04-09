@@ -1,0 +1,144 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{ category }}</title>
+
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      color: white;
+      font-family: Arial;
+      text-align: center;
+    }
+
+    h1 {
+      padding: 20px;
+      text-transform: capitalize;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      padding: 20px;
+    }
+
+    /* 📸 IMAGE */
+    .gallery-grid img {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+      border-radius: 15px;
+      cursor: pointer;
+      transition: 0.4s;
+    }
+
+    .gallery-grid img:hover {
+      transform: scale(1.05);
+    }
+
+    /* 🎬 VIDEO */
+    .video-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 15px;
+    }
+
+    .video-item {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+      transition: 0.5s;
+    }
+
+    .video-card:hover .video-item {
+      transform: scale(1.1);
+    }
+
+    /* 🔍 MODAL */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+    }
+
+    .modal img {
+      display: block;
+      margin: auto;
+      max-width: 90%;
+      max-height: 90%;
+      margin-top: 5%;
+      border-radius: 10px;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<h1>{{ category }}</h1>
+
+<div class="gallery-grid">
+
+  {% for img in images %}
+
+    {% if img.video %}
+    <!-- 🎬 VIDEO -->
+    <div class="video-card">
+      <video class="video-item" muted loop>
+        <source src="{{ img.video.url }}" type="video/mp4">
+      </video>
+    </div>
+
+    {% else %}
+    <!-- 📸 IMAGE -->
+    <img src="{{ img.image.url }}" onclick="openModal(this.src)">
+    {% endif %}
+
+  {% endfor %}
+
+</div>
+
+<!-- 🔍 IMAGE MODAL -->
+<div id="imageModal" class="modal" onclick="closeModal()">
+  <img id="modalImg">
+</div>
+
+<script>
+// 🔍 IMAGE MODAL
+function openModal(src) {
+  document.getElementById("imageModal").style.display = "block";
+  document.getElementById("modalImg").src = src;
+}
+
+function closeModal() {
+  document.getElementById("imageModal").style.display = "none";
+}
+
+// 🎬 VIDEO AUTO PLAY + HOVER SOUND
+document.querySelectorAll(".video-item").forEach(video => {
+
+  video.play();
+
+  video.addEventListener("mouseenter", () => {
+    video.muted = false;
+    video.play();
+  });
+
+  video.addEventListener("mouseleave", () => {
+    video.muted = true;
+  });
+
+});
+</script>
+
+</body>
+</html>
