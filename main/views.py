@@ -10,28 +10,23 @@ from .models import Testimonial
 import json
 import requests
 from difflib import get_close_matches
-from googletrans import Translator
+# from googletrans import Translator
 
 from .models import Gallery, Booking, ChatData, UnknownQuestion
 
 
 # 🌍 Translator
-translator = Translator()
+
 
 
 def safe_detect_language(text):
-    try:
-        detected = translator.detect(text)
-        return detected.lang if detected and detected.lang else "en"
-    except Exception:
-        return "en"
-
+    for ch in text:
+        if '\u0900' <= ch <= '\u097F':
+            return "hi"
+    return "en"
 
 def safe_translate(text, dest):
-    try:
-        return translator.translate(text, dest=dest).text
-    except Exception:
-        return text
+    return text
 
 
 def get_studio_reply(user_msg):
@@ -208,16 +203,7 @@ def chatbot_api(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
-            user_msg_original = data.get("message", "")
-
-            # 🌍 LANGUAGE DETECT
-            user_lang = safe_detect_language(user_msg_original)
-
-            # 🔄 TRANSLATE TO ENGLISH
-            if user_lang != "en":
-                user_msg = safe_translate(user_msg_original, dest="en").lower()
-            else:
-                user_msg = user_msg_original.lower()
+            user_msg = data.get("message", "").lower()
 
             # =========================
             # 🔥 1. DATABASE MATCH
@@ -230,22 +216,17 @@ def chatbot_api(request):
             if match:
                 for item in all_data:
                     if item.question.lower() == match[0]:
-                        answer = item.answer
+                        return JsonResponse({"reply": item.answer})
 
-                        # 🔄 TRANSLATE BACK
-                        if user_lang != "en":
-                            answer = safe_translate(answer, dest=user_lang)
-
-                        return JsonResponse({"reply": answer})
-
+            # =========================
+            # 🔥 2. STUDIO REPLY
+            # =========================
             studio_answer = get_studio_reply(user_msg)
             if studio_answer:
-                if user_lang != "en":
-                    studio_answer = safe_translate(studio_answer, dest=user_lang)
                 return JsonResponse({"reply": studio_answer})
 
             # =========================
-            # 🔥 2. SMART REPLIES
+            # 🔥 3. SMART REPLIES
             # =========================
             if "booking" in user_msg:
                 answer = "📅 Booking ke liye WhatsApp button use kare."
@@ -265,16 +246,11 @@ def chatbot_api(request):
             ):
                 answer = (
                     "📒 Album design me Classic Royal, Minimal Premium, "
-                    "Storytelling Collage aur Cinematic Full-Page layouts available hain. "
-                    "Aap photos bhejo, hum print-ready album design bana denge."
+                    "Storytelling Collage aur Cinematic Full-Page layouts available hain."
                 )
 
             else:
                 answer = "🙏 Ask about booking, wedding, album design or price."
-
-            # 🔄 TRANSLATE BACK
-            if user_lang != "en":
-                answer = safe_translate(answer, dest=user_lang)
 
             # =========================
             # 🧠 SAVE UNKNOWN
@@ -283,10 +259,12 @@ def chatbot_api(request):
 
             return JsonResponse({"reply": answer})
 
-        except Exception as e:
+        except Exception:
             return JsonResponse({"reply": "Error, please try again."})
 
     return JsonResponse({"reply": "Invalid request"})
+
+           
 @csrf_exempt
 def submit_feedback(request):
     if request.method == "POST":
