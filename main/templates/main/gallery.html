@@ -4,18 +4,143 @@
 <html>
 <head>
   <title>{{ category }}</title>
+  <link rel="icon" type="image/jpeg" href="{% static 'main/logo.jpeg' %}">
 
   <style>
     body {
       margin: 0;
+      padding-top: 78px;
       background: black;
       color: white;
       font-family: Arial;
       text-align: center;
     }
 
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 24px;
+      box-sizing: border-box;
+      background: rgba(0, 0, 0, 0.82);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255, 215, 0, 0.18);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 18px;
+      font-weight: bold;
+      letter-spacing: 0.8px;
+    }
+
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid rgba(255, 215, 0, 0.35);
+    }
+
+    .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      padding: 8px 14px;
+      border-radius: 999px;
+      transition: 0.3s;
+    }
+
+    .nav-links a:hover {
+      background: gold;
+      color: black;
+    }
+
+    #page-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(circle at top, rgba(212, 175, 55, 0.2), transparent 34%),
+        linear-gradient(180deg, #090909 0%, #000000 100%);
+      transition: opacity 0.35s ease, visibility 0.35s ease;
+    }
+
+    #page-loader.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .loader-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 28px 32px;
+      border-radius: 24px;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 215, 0, 0.18);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(12px);
+    }
+
+    .loader-logo {
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(255, 215, 0, 0.35);
+      animation: loaderPulse 1.4s ease-in-out infinite;
+    }
+
+    .loader-text {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #f5e6a4;
+    }
+
+    .loader-spinner {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 3px solid rgba(255, 215, 0, 0.22);
+      border-top-color: gold;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes loaderPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+    }
+
     h1 {
-      padding: 20px;
+      padding: 18px 20px 10px;
       text-transform: capitalize;
     }
 
@@ -83,6 +208,24 @@
 </head>
 
 <body>
+<div id="page-loader" aria-label="Loading page">
+  <div class="loader-card">
+    <img src="{% static 'main/logo.jpeg' %}" alt="Jai Maa Bhadrakali Studio logo" class="loader-logo">
+    <div class="loader-spinner"></div>
+    <p class="loader-text">Loading Studio</p>
+  </div>
+</div>
+
+<nav class="navbar">
+  <a href="/" class="brand">
+    <img src="{% static 'main/logo.jpeg' %}" alt="Jai Maa Bhadrakali Studio logo" class="brand-logo">
+    <span>Jai Maa Bhadrakali Studio</span>
+  </a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/services/">Services</a>
+  </div>
+</nav>
 
 <h1>{{ category }}</h1>
 
@@ -93,7 +236,7 @@
     {% if img.video %}
     <!-- 🎬 VIDEO -->
     <div class="video-card">
-      <video class="video-item" muted loop>
+      <video class="video-item" muted loop playsinline preload="metadata">
         <source src="{{ img.video.url }}" type="video/mp4">
       </video>
     </div>
@@ -125,18 +268,22 @@ function closeModal() {
 
 // 🎬 VIDEO AUTO PLAY + HOVER SOUND
 document.querySelectorAll(".video-item").forEach(video => {
-
-  video.play();
+  video.play().catch(() => {
+    // Browsers can block autoplay until the user interacts.
+  });
 
   video.addEventListener("mouseenter", () => {
     video.muted = false;
-    video.play();
+    video.play().catch(() => {});
   });
 
   video.addEventListener("mouseleave", () => {
     video.muted = true;
   });
+});
 
+window.addEventListener("load", () => {
+  document.getElementById("page-loader")?.classList.add("hidden");
 });
 </script>
 

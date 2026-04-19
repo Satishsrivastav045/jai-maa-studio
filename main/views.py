@@ -19,11 +19,111 @@ from .models import Gallery, Booking, ChatData, UnknownQuestion
 translator = Translator()
 
 
+def safe_detect_language(text):
+    try:
+        detected = translator.detect(text)
+        return detected.lang if detected and detected.lang else "en"
+    except Exception:
+        return "en"
+
+
+def safe_translate(text, dest):
+    try:
+        return translator.translate(text, dest=dest).text
+    except Exception:
+        return text
+
+
+def get_studio_reply(user_msg):
+    msg = user_msg.lower()
+
+    if any(k in msg for k in ["working hours", "timing", "open", "available time", "time", "hours"]):
+        return "🕘 Hum 9:00 AM se 9:00 PM tak available hain."
+
+    if any(k in msg for k in ["service area", "area", "city", "village", "where do you work", "where are you from", "location"]):
+        return (
+            "📍 Wedding, pre-wedding, photography, videography, album design aur event coverage "
+            "mainly Uttar Pradesh me available hai. Katha aur live streaming all over India available hai."
+        )
+
+    if any(k in msg for k in ["outstation", "destination", "travel", "outside city", "outside state"]):
+        return "🚗 Haan, outstation shoot available hai. Travel, stay aur location-based charges apply ho sakte hain."
+
+    if "drone" in msg:
+        return "🚁 Drone service request ya custom package par available hai."
+
+    if any(k in msg for k in ["live streaming", "streaming", "live video", "live katha", "katha"]):
+        return "📡 Haan, live katha streaming karte hain. All over India coverage available hai."
+
+    if any(k in msg for k in ["price", "pricing", "package", "cost", "charge", "rate", "fee", "pre-wedding kitne", "wedding kitne", "album kitne"]):
+        return (
+            "💰 Packages event, location aur coverage ke hisaab se custom hote hain. "
+            "Photography packages generally ₹25,000 se start hote hain. "
+            "Photo + video, pre-wedding, album design, drone, extra hours, travel aur outstation charges alag ho sakte hain."
+        )
+
+    if any(k in msg for k in ["services list", "services do", "what services", "services", "dete ho", "offer", "provide"]):
+        return (
+            "🎬 Hum pre-wedding shoot, wedding photography, wedding videography, candid photography, "
+            "cinematic video, album design, live katha streaming aur all types of event coverage provide karte hain."
+        )
+
+    if any(k in msg for k in ["photographer", "photographers", "team", "crew", "kitne photographer"]):
+        return "📸 Team size event aur package ke hisaab se decide hota hai. Usually photographer aur videographer ki proper team available hoti hai."
+
+    if any(k in msg for k in ["booking", "book", "advance", "payment", "confirm", "cancel", "refund"]):
+        return (
+            "📅 Booking WhatsApp ya call par hoti hai. Date lock karne ke liye advance required hota hai. "
+            "Payment UPI, cash ya bank transfer se le sakte hain. Booking advance receive hone par confirm hoti hai. "
+            "Cancellation/refund policy case-to-case basis par discuss ki jaati hai."
+        )
+
+    if any(k in msg for k in ["delivery", "deliver", "raw photo", "raw video", "album ready", "photos kitne din", "video kitne din"]):
+        return (
+            "📦 Photos, video aur album ki delivery project size aur season ke hisaab se hoti hai. "
+            "Usually photos 7-15 working days, video 15-30 working days aur album 30-45 days me ready ho jata hai. "
+            "Raw photos/video request ya package ke hisaab se share kiye ja sakte hain."
+        )
+
+    if any(k in msg for k in ["album me kitni photos", "album photos", "album pages", "album size"]):
+        return (
+            "📒 Album me photos aur pages package aur album size ke hisaab se customize hote hain. "
+            "Final count shoot coverage aur selected album design par depend karta hai."
+        )
+
+    if any(k in msg for k in ["wedding", "engagement", "haldi", "mehndi", "birthday", "katha", "other functions", "function", "event"]):
+        return (
+            "✨ Wedding, engagement, haldi, mehndi, birthday, katha aur other family events sab cover karte hain. "
+            "Har event ke liye custom package available hai."
+        )
+
+    if any(k in msg for k in ["whatsapp", "contact", "call", "number", "how to contact"]):
+        return "📲 WhatsApp par directly contact karke booking aur details le sakte hain."
+
+    if any(k in msg for k in ["album me kitni photos", "album pages", "album design", "photo book", "album"]):
+        return (
+            "📒 Album design me Classic Royal, Minimal Premium, Storytelling Collage aur Cinematic Full-Page layouts available hain. "
+            "Album me photos aur pages package ke hisaab se decide hote hain."
+        )
+
+    if any(k in msg for k in ["language", "tone", "reply style", "short reply", "detailed"]):
+        return "💬 Reply Hindi/Hinglish me friendly aur simple style me diya jata hai. Zarurat par short ya detailed dono type ke answers mil sakte hain."
+
+    if any(k in msg for k in ["fake promise", "don’t know", "dont know", "uncertain", "avoid"]):
+        return "✅ Agar koi detail confirm nahi hoti, to hum fake promise nahi karte aur booking time par final information share karte hain."
+
+    return None
+
+
 # =========================
 # 🏠 HOME PAGE
 # =========================
 def home(request):
-    images = Gallery.objects.all().order_by('-id')
+    images = (
+        Gallery.objects.filter(image__isnull=False)
+        .exclude(image="")
+        .order_by('-id')[:8]
+    )
     testimonials = Testimonial.objects.filter(approved=True)
 
     return render(request, "main/home.html", {
@@ -39,7 +139,7 @@ def services_page(request):
 # 📸 CATEGORY API
 # =========================
 def get_category_images(request, category):
-    images = Gallery.objects.filter(category=category)
+    images = Gallery.objects.filter(category=category).order_by('-id')
 
     data = []
     for img in images:
@@ -111,12 +211,11 @@ def chatbot_api(request):
             user_msg_original = data.get("message", "")
 
             # 🌍 LANGUAGE DETECT
-            detected = translator.detect(user_msg_original)
-            user_lang = detected.lang
+            user_lang = safe_detect_language(user_msg_original)
 
             # 🔄 TRANSLATE TO ENGLISH
             if user_lang != "en":
-                user_msg = translator.translate(user_msg_original, dest="en").text.lower()
+                user_msg = safe_translate(user_msg_original, dest="en").lower()
             else:
                 user_msg = user_msg_original.lower()
 
@@ -135,9 +234,15 @@ def chatbot_api(request):
 
                         # 🔄 TRANSLATE BACK
                         if user_lang != "en":
-                            answer = translator.translate(answer, dest=user_lang).text
+                            answer = safe_translate(answer, dest=user_lang)
 
                         return JsonResponse({"reply": answer})
+
+            studio_answer = get_studio_reply(user_msg)
+            if studio_answer:
+                if user_lang != "en":
+                    studio_answer = safe_translate(studio_answer, dest=user_lang)
+                return JsonResponse({"reply": studio_answer})
 
             # =========================
             # 🔥 2. SMART REPLIES
@@ -151,12 +256,25 @@ def chatbot_api(request):
             elif "foreign" in user_msg or "tourist" in user_msg:
                 answer = "🌍 We provide full Indian wedding experience including stay, food, travel."
 
+            elif (
+                "album" in user_msg
+                or "photobook" in user_msg
+                or "layout" in user_msg
+                or "cover" in user_msg
+                or "pages" in user_msg
+            ):
+                answer = (
+                    "📒 Album design me Classic Royal, Minimal Premium, "
+                    "Storytelling Collage aur Cinematic Full-Page layouts available hain. "
+                    "Aap photos bhejo, hum print-ready album design bana denge."
+                )
+
             else:
-                answer = "🙏 Ask about booking, wedding or price."
+                answer = "🙏 Ask about booking, wedding, album design or price."
 
             # 🔄 TRANSLATE BACK
             if user_lang != "en":
-                answer = translator.translate(answer, dest=user_lang).text
+                answer = safe_translate(answer, dest=user_lang)
 
             # =========================
             # 🧠 SAVE UNKNOWN
@@ -184,7 +302,7 @@ def submit_feedback(request):
 
     return JsonResponse({"status": "error"})
 def gallery_view(request, category):
-    images = Gallery.objects.filter(category=category)
+    images = Gallery.objects.filter(category=category).order_by('-id')
 
     return render(request, "main/gallery.html", {
         "images": images,
