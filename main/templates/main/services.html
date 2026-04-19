@@ -1,0 +1,251 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Services | Bhadrakali Studio</title>
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+    body {
+      margin: 0;
+      font-family: Arial;
+      background:
+        radial-gradient(circle at top, rgba(212, 175, 55, 0.22), transparent 30%),
+        linear-gradient(180deg, #050505 0%, #111111 100%);
+      color: white;
+    }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 28px;
+      background: rgba(0, 0, 0, 0.82);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255, 215, 0, 0.16);
+    }
+    .brand {
+      font-size: 20px;
+      font-weight: bold;
+      letter-spacing: 0.8px;
+    }
+    .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+    .nav-links a {
+      padding: 8px 14px;
+      border-radius: 999px;
+      transition: 0.3s;
+    }
+    .nav-links a:hover,
+    .nav-links a.active {
+      background: gold;
+      color: black;
+    }
+    .hero {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 80px 20px 36px;
+      text-align: center;
+    }
+    .hero h1 {
+      font-size: 52px;
+      margin-bottom: 14px;
+    }
+    .hero p {
+      max-width: 720px;
+      margin: 0 auto;
+      color: #d0d0d0;
+      font-size: 18px;
+      line-height: 1.7;
+    }
+    .section {
+      max-width: 1150px;
+      margin: 0 auto;
+      padding: 24px 20px 80px;
+    }
+    .section h2 {
+      text-align: center;
+      font-size: 38px;
+      margin-bottom: 30px;
+    }
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 22px;
+    }
+    .service-card {
+      padding: 28px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.22);
+      transition: transform 0.3s, border-color 0.3s;
+    }
+    .service-card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(255, 215, 0, 0.45);
+    }
+    .service-card h3 {
+      margin-top: 0;
+      font-size: 24px;
+      color: gold;
+    }
+    .service-card p {
+      color: #d5d5d5;
+      line-height: 1.6;
+    }
+    .service-card a {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      background: gold;
+      color: black;
+      font-weight: bold;
+    }
+    .info-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+      margin-top: 34px;
+    }
+    .info-box {
+      padding: 22px;
+      border-radius: 18px;
+      background: rgba(0, 0, 0, 0.42);
+      border: 1px solid rgba(255, 215, 0, 0.14);
+      text-align: center;
+    }
+    .cta {
+      text-align: center;
+      padding: 0 20px 90px;
+    }
+    .cta a {
+      display: inline-block;
+      padding: 14px 28px;
+      border-radius: 999px;
+      background: gold;
+      color: black;
+      font-weight: bold;
+    }
+    @media (max-width: 768px) {
+      .navbar {
+        padding: 14px 16px;
+        gap: 10px;
+      }
+      .brand {
+        font-size: 17px;
+      }
+      .nav-links {
+        gap: 8px;
+      }
+      .nav-links a {
+        padding: 7px 10px;
+        font-size: 13px;
+      }
+      .hero {
+        padding-top: 56px;
+      }
+      .hero h1 {
+        font-size: 36px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="brand">Jai Maa Bhadrakali Studio</a>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/services/" class="active">Services</a>
+      <a href="/#gallery">Gallery</a>
+      <a href="/#packages">Packages</a>
+      <a href="/#contact">Contact</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <h1>Our Services</h1>
+    <p>
+      Wedding se lekar live katha streaming tak, hum har important moment ko cinematic style,
+      emotional storytelling aur clean professional coverage ke saath capture karte hain.
+    </p>
+  </section>
+
+  <section class="section">
+    <h2>What We Offer</h2>
+    <div class="services-grid">
+      <div class="service-card">
+        <h3>Pre-Wedding Shoot</h3>
+        <p>Outdoor concepts, romantic frames aur cinematic reels ke saath premium pre-wedding coverage.</p>
+        <a href="/gallery/prewedding/">View Work</a>
+      </div>
+      <div class="service-card">
+        <h3>Candid Photography</h3>
+        <p>Natural emotions, family moments aur real expressions ko beautifully capture karne wali coverage.</p>
+        <a href="/gallery/candid/">View Work</a>
+      </div>
+      <div class="service-card">
+        <h3>Fine Art / Editorial</h3>
+        <p>Stylish compositions, premium lighting aur magazine-look portraits for standout wedding memories.</p>
+        <a href="/gallery/fineart/">View Work</a>
+      </div>
+      <div class="service-card">
+        <h3>Cinematic Highlights</h3>
+        <p>Story-driven wedding films with smooth edits, emotional music feel aur memorable highlight sequences.</p>
+        <a href="/gallery/cinematic/">View Work</a>
+      </div>
+      <div class="service-card">
+        <h3>Traditional Video</h3>
+        <p>Complete ceremony coverage with clear event flow so every ritual properly documented rahe.</p>
+        <a href="/gallery/traditional/">View Work</a>
+      </div>
+      <div class="service-card">
+        <h3>Live Katha Streaming</h3>
+        <p>Religious events aur special programs ke liye stable multi-angle live streaming support.</p>
+        <a href="/gallery/katha/">View Work</a>
+      </div>
+      <div class="service-card">
+        <h3>Wedding Album Design</h3>
+        <p>Elegant layouts, premium print-ready design aur timeless storytelling ke saath album creation.</p>
+        <a href="/gallery/album/">View Work</a>
+      </div>
+      <div class="service-card">
+        <h3>All Types of Photography</h3>
+        <p>Wedding, engagement, events, rituals aur family functions ke liye customized coverage packages.</p>
+        <a href="/#booking">Book Now</a>
+      </div>
+    </div>
+
+    <div class="info-strip">
+      <div class="info-box">
+        <h3>Custom Packages</h3>
+        <p>Budget aur event size ke hisaab se flexible service combinations available hain.</p>
+      </div>
+      <div class="info-box">
+        <h3>Fast Coordination</h3>
+        <p>WhatsApp par direct booking, planning aur shoot updates easily manage kiye ja sakte hain.</p>
+      </div>
+      <div class="info-box">
+        <h3>Trusted Coverage</h3>
+        <p>Local events se destination-style shoots tak dependable team support milta hai.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="cta">
+    <a href="/#booking">Book Your Shoot</a>
+  </div>
+</body>
+</html>

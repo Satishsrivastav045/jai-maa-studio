@@ -24,15 +24,16 @@ translator = Translator()
 # =========================
 def home(request):
     images = Gallery.objects.all().order_by('-id')
-    return render(request, "main/home.html", {"images": images})
-def home(request):
-    images = Gallery.objects.all().order_by('-id')
     testimonials = Testimonial.objects.filter(approved=True)
 
     return render(request, "main/home.html", {
         "images": images,
         "testimonials": testimonials
     })
+
+
+def services_page(request):
+    return render(request, "main/services.html")
 
 # =========================
 # 📸 CATEGORY API
@@ -182,3 +183,10 @@ def submit_feedback(request):
         return JsonResponse({"status": "success"})
 
     return JsonResponse({"status": "error"})
+def gallery_view(request, category):
+    images = Gallery.objects.filter(category=category)
+
+    return render(request, "main/gallery.html", {
+        "images": images,
+        "category": category
+    })

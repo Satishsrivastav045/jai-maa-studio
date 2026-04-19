@@ -12,6 +12,50 @@
       color: white;
       background: black;
     }
+    html {
+      scroll-behavior: smooth;
+    }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 28px;
+      box-sizing: border-box;
+      background: rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255, 215, 0, 0.18);
+    }
+    .brand {
+      font-size: 20px;
+      font-weight: bold;
+      letter-spacing: 0.8px;
+    }
+    .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+    }
+    .nav-links a {
+      color: #f5f5f5;
+      font-size: 15px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      transition: 0.3s;
+    }
+    .nav-links a:hover {
+      background: gold;
+      color: black;
+    }
     /* 💬 CHAT BUTTON LEFT SIDE */
 #chat-btn {
   position: fixed;
@@ -76,6 +120,7 @@
       position: relative;
       height: 100vh;
       overflow: hidden;
+      padding-top: 72px;
     }
 
     .hero video {
@@ -307,8 +352,34 @@
 }
 
 .highlight {
-  background: gold;
-  color: black;
+  background: #050505;
+  color: white;
+  border: 1px solid rgba(255, 215, 0, 0.45);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
+}
+
+.highlight h4 {
+  color: gold;
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  .brand {
+    font-size: 17px;
+  }
+
+  .nav-links {
+    gap: 8px;
+  }
+
+  .nav-links a {
+    font-size: 13px;
+    padding: 7px 10px;
+  }
 }
 /* =========================
    🔥 TESTIMONIAL SECTION
@@ -490,6 +561,17 @@
 
 <body>
 
+  <nav class="navbar">
+    <a href="/" class="brand">Jai Maa Bhadrakali Studio</a>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/services/">Services</a>
+      <a href="#gallery">Gallery</a>
+      <a href="#packages">Packages</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </nav>
+
   <!-- HERO -->
   <section class="hero">
 
@@ -508,8 +590,8 @@
       </p>
 
       <div class="buttons">
-        <button class="btn btn-primary">🎬 Book Now</button>
-        <button class="btn btn-outline">📸 View Work</button>
+        <a href="#booking" class="btn btn-primary">🎬 Book Now</a>
+        <a href="#gallery" class="btn btn-outline">📸 View Work</a>
       </div>
 
     </div>
@@ -517,7 +599,7 @@
   </section>
 
  <!-- SERVICES -->
-<section class="services">
+<section class="services" id="services">
 
   <h2>Our Services</h2>
 
@@ -545,9 +627,13 @@
     Packages are customized based on your requirements & budget.
   </p>
 
+  <p style="margin-top: 20px;">
+    <a href="/services/" class="btn btn-primary">Open Full Services Page</a>
+  </p>
+
 </section>
   <!-- GALLERY -->
-  <section class="gallery">
+  <section class="gallery" id="gallery">
   
     <h2>Our Work</h2>
   
@@ -567,7 +653,7 @@
   <img id="modalImg">
 </div>
   <!-- PACKAGES -->
-<section class="packages">
+<section class="packages" id="packages">
 
   <h2>Our Packages</h2>
 
@@ -643,7 +729,7 @@
 
 </section>
 <!-- BOOKING FORM -->
-<section class="booking">
+<section class="booking" id="booking">
 
   <h2>Book Your Shoot</h2>
 
@@ -660,7 +746,7 @@
 
 </section>
 <!-- CONTACT -->
-<section class="contact">
+<section class="contact" id="contact">
 
   <h2>Contact Us</h2>
 
@@ -757,11 +843,11 @@ function closeModal() {
 // 🔥 VIDEO SLIDER (HOTSTAR STYLE)
 // =======================
 const videos = [
-  "/static/main/video1.mp4",
-  "/static/main/video2.mp4",
-  "/static/main/video3.mp4",
-  "/static/main/video4.mp4",
-  "/static/main/video5.mp4"
+  "{% static 'main/video1.mp4' %}",
+  "{% static 'main/video2.mp4' %}",
+  "{% static 'main/video3.mp4' %}",
+  "{% static 'main/video4.mp4' %}",
+  "{% static 'main/video5.mp4' %}"
 ];
 
 let videoIndex = 0;
