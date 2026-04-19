@@ -180,3 +180,14 @@ else:
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+import django
+
+if os.getenv("RENDER") == "true":
+    try:
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        if not User.objects.filter(username="admin").exists():
+            User.objects.create_superuser("admin", "admin@gmail.com", "admin123")
+            print("Superuser created")
+    except Exception as e:
+        print(e)
