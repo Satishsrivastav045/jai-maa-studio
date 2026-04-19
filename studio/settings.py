@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from urllib.parse import urlparse
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,7 +22,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-prpj$m_+8)ogwy-ozllc-v4*a6%@acxb_=@-*oxs4tz71@(&8n'
+SECRET_KEY = os.getenv(
+    "SECRET_KEY",
+    "django-insecure-prpj$m_+8)ogwy-ozllc-v4*a6%@acxb_=@-*oxs4tz71@(&8n",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "True").lower() == "true"
@@ -43,6 +47,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -80,6 +85,21 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+database_url = os.getenv("DATABASE_URL")
+if database_url:
+    parsed = urlparse(database_url)
+    if parsed.scheme in {"postgres", "postgresql"}:
+        DATABASES["default"] = {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": parsed.path.lstrip("/"),
+            "USER": parsed.username or "",
+            "PASSWORD": parsed.password or "",
+            "HOST": parsed.hostname or "",
+            "PORT": parsed.port or 5432,
+            "CONN_MAX_AGE": 600,
+            "OPTIONS": {"sslmode": "require"} if not DEBUG else {},
+        }
 
 
 # Password validation
@@ -121,6 +141,11 @@ STATICFILES_DIRS = [
     BASE_DIR / "main/static",
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
