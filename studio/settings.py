@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'main',
+    'main.apps.MainConfig',,
 ]
 
 MIDDLEWARE = [
@@ -180,17 +180,3 @@ else:
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-import django
-
-try:
-    from django.contrib.auth import get_user_model
-    User = get_user_model()
-
-    User.objects.filter(username="admin").delete()
-
-    User.objects.create_superuser("admin", "admin@gmail.com", "admin123")
-
-    print("Superuser reset done")
-
-except Exception as e:
-    print(e)
