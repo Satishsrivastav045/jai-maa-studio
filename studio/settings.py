@@ -161,7 +161,7 @@ if USE_CLOUDINARY:
         'RESOURCE_TYPE': 'auto',
     }
     STORAGES["default"] = {
-        "BACKEND": "cloudinary_storage.storage.RawMediaCloudinaryStorage",
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     }
 else:
     STORAGES["default"] = {
