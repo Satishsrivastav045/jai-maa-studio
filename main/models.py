@@ -16,7 +16,7 @@ class Gallery(models.Model):
         ('album', 'Wedding Album Design'),
     ]
 
-    image = models.ImageField(upload_to='gallery/', null=True, blank=True)
+    image = models.FileField(upload_to='gallery/', null=True, blank=True)
     video = models.FileField(upload_to='videos/', null=True, blank=True)
 
     title = models.CharField(max_length=100, blank=True)
