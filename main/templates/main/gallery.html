@@ -238,19 +238,15 @@
 </nav>
 
 <h1>{{ category }}</h1>
+
 <div class="gallery">
-
-  {% for img in images %}
-
-  {% if img.video %}
- <div class="gallery">
 
   {% for img in images %}
 
     {% if img.video %}
     <!-- 🎬 VIDEO -->
     <div class="gallery-item">
-      <video class="video-item" muted loop playsinline>
+      <video class="video-item" controls muted loop playsinline>
         <source src="{{ img.video.url }}" type="video/mp4">
       </video>
     </div>
