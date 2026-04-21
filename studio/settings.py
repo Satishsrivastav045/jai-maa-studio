@@ -182,16 +182,15 @@ else:
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 import django
 
-if os.getenv("RENDER") == "true":
-    try:
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
+try:
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
 
-        User.objects.filter(username="admin").delete()
+    User.objects.filter(username="admin").delete()
 
-        User.objects.create_superuser("admin", "admin@gmail.com", "admin123")
+    User.objects.create_superuser("admin", "admin@gmail.com", "admin123")
 
-        print("Superuser reset done")
+    print("Superuser reset done")
 
-    except Exception as e:
-        print(e)
+except Exception as e:
+    print(e)
