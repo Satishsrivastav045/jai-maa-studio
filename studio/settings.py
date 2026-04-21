@@ -186,8 +186,14 @@ if os.getenv("RENDER") == "true":
     try:
         from django.contrib.auth import get_user_model
         User = get_user_model()
-        if not User.objects.filter(username="admin").exists():
-            User.objects.create_superuser("admin", "admin@gmail.com", "admin123")
-            print("Superuser created")
+
+        # 🔥 existing admin delete karo
+        User.objects.filter(username="admin").delete()
+
+        # 🔥 naya admin create karo
+        User.objects.create_superuser("admin", "admin@gmail.com", "admin123")
+
+        print("Superuser reset done")
+
     except Exception as e:
         print(e)
