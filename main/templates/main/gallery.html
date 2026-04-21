@@ -144,44 +144,53 @@
       text-transform: capitalize;
     }
 
-    .gallery-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 15px;
-      padding: 20px;
-    }
+    .gallery {
+  column-count: 3;
+  column-gap: 15px;
+  padding: 20px;
+}
 
-    /* 📸 IMAGE */
-    .gallery-grid img {
-      width: 100%;
-      height: 250px;
-      object-fit: cover;
-      border-radius: 15px;
-      cursor: pointer;
-      transition: 0.4s;
-    }
+.gallery-item {
+  break-inside: avoid;
+  margin-bottom: 15px;
+  position: relative;
+}
 
-    .gallery-grid img:hover {
-      transform: scale(1.05);
-    }
+.gallery img, .video-item {
+  width: 100%;
+  border-radius: 15px;
+  transition: 0.3s;
+}
 
-    /* 🎬 VIDEO */
-    .video-card {
-      position: relative;
-      overflow: hidden;
-      border-radius: 15px;
-    }
+.gallery img:hover, .video-item:hover {
+  transform: scale(1.05);
+}
 
-    .video-item {
-      width: 100%;
-      height: 250px;
-      object-fit: cover;
-      transition: 0.5s;
-    }
+/* overlay */
+.overlay {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  text-align: center;
+  opacity: 0;
+  transition: 0.3s;
+  border-radius: 0 0 15px 15px;
+}
 
-    .video-card:hover .video-item {
-      transform: scale(1.1);
-    }
+.gallery-item:hover .overlay {
+  opacity: 1;
+}
+
+/* responsive */
+@media (max-width: 768px) {
+  .gallery { column-count: 2; }
+}
+
+@media (max-width: 480px) {
+  .gallery { column-count: 1; }
+}
 
     /* 🔍 MODAL */
     .modal {
@@ -228,23 +237,27 @@
 </nav>
 
 <h1>{{ category }}</h1>
-
-<div class="gallery-grid">
+<div class="gallery">
 
   {% for img in images %}
 
-    {% if img.video %}
-    <!-- 🎬 VIDEO -->
-    <div class="video-card">
-      <video class="video-item" muted loop playsinline preload="metadata">
-        <source src="{{ img.video.url }}" type="video/mp4">
-      </video>
-    </div>
+  {% if img.video %}
+  <!-- 🎬 VIDEO -->
+  <div class="gallery-item">
+    <video class="video-item" muted loop playsinline>
+      <source src="{{ img.video.url }}" type="video/mp4">
+    </video>
+  </div>
 
-    {% else %}
-    <!-- 📸 IMAGE -->
-    <img src="{{ img.image.url }}" onclick="openModal(this.src)">
-    {% endif %}
+  {% else %}
+  <!-- 📸 IMAGE -->
+  <div class="gallery-item">
+    <img src="{{ img.image.url }}" loading="lazy" onclick="openModal(this.src)">
+    <div class="overlay">
+      <p>{{ img.title }}</p>
+    </div>
+  </div>
+  {% endif %}
 
   {% endfor %}
 
