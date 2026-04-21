@@ -243,22 +243,27 @@
   {% for img in images %}
 
   {% if img.video %}
-  <!-- 🎬 VIDEO -->
-  <div class="gallery-item">
-    <video class="video-item" muted loop playsinline>
-      <source src="{{ img.video.url }}" type="video/mp4">
-    </video>
-  </div>
+ <div class="gallery">
 
-  {% else %}
-  <!-- 📸 IMAGE -->
-  <div class="gallery-item">
-    <img src="{{ img.image.url }}" loading="lazy" onclick="openModal(this.src)">
-    <div class="overlay">
-      <p>{{ img.title }}</p>
+  {% for img in images %}
+
+    {% if img.video %}
+    <!-- 🎬 VIDEO -->
+    <div class="gallery-item">
+      <video class="video-item" muted loop playsinline>
+        <source src="{{ img.video.url }}" type="video/mp4">
+      </video>
     </div>
-  </div>
-  {% endif %}
+
+    {% elif img.image %}
+    <!-- 📸 IMAGE -->
+    <div class="gallery-item">
+      <img src="{{ img.image.url }}" loading="lazy">
+      <div class="overlay">
+        <p>{{ img.title }}</p>
+      </div>
+    </div>
+    {% endif %}
 
   {% endfor %}
 
