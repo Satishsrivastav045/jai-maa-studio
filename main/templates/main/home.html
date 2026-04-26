@@ -679,7 +679,7 @@
   <!-- HERO -->
   <section class="hero">
 
-    <video id="sliderVideo" autoplay muted loop></video>
+    <video id="sliderVideo" autoplay muted loop playsinline></video>
 
     <div class="overlay"></div>
 
@@ -970,13 +970,22 @@ const videos = [
 
 let videoIndex = 0;
 
+function playSliderVideo(slider) {
+  const playPromise = slider.play();
+  if (playPromise && typeof playPromise.catch === "function") {
+    playPromise.catch(() => {
+      // Chrome may pause background media to save power; resume on next cycle/user visit.
+    });
+  }
+}
+
 function changeVideo() {
   const slider = document.getElementById("sliderVideo");
   if (!slider) return;
 
   slider.src = videos[videoIndex];
   slider.load();
-  slider.play();
+  playSliderVideo(slider);
 
   videoIndex = (videoIndex + 1) % videos.length;
 }
