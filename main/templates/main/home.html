@@ -649,6 +649,594 @@
   transform: scale(1.1);
 }
 
+/* =========================
+   REAL-WORLD STUDIO POLISH
+========================= */
+:root {
+  --bg: #080806;
+  --panel: #12110f;
+  --panel-soft: rgba(255, 255, 255, 0.06);
+  --line: rgba(255, 255, 255, 0.12);
+  --text: #fffaf0;
+  --muted: #c8c0b2;
+  --gold: #d8b257;
+  --gold-soft: #f2d790;
+  --green: #2fbf71;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+body::selection {
+  background: var(--gold);
+  color: #111;
+}
+
+.navbar {
+  padding: 12px 44px;
+  background: rgba(8, 8, 6, 0.88);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  font-size: 16px;
+  letter-spacing: 0;
+}
+
+.brand-logo {
+  width: 44px;
+  height: 44px;
+}
+
+.nav-links {
+  gap: 6px;
+}
+
+.nav-links a {
+  border-radius: 4px;
+  color: var(--muted);
+  font-size: 14px;
+  padding: 9px 12px;
+}
+
+.nav-links a:hover {
+  background: rgba(216, 178, 87, 0.14);
+  color: var(--gold-soft);
+}
+
+.hero {
+  min-height: 92vh;
+  height: auto;
+  padding: 96px 44px 42px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.hero video {
+  inset: 0;
+  filter: saturate(0.92) contrast(1.05);
+}
+
+.overlay {
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.54) 42%, rgba(0, 0, 0, 0.24) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.84) 100%);
+}
+
+.content {
+  align-items: flex-start;
+  justify-content: flex-end;
+  text-align: left;
+  width: 100%;
+  max-width: 1180px;
+  min-height: 74vh;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.hero-kicker,
+.section-kicker {
+  margin: 0 0 12px;
+  color: var(--gold-soft);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.7px;
+  text-transform: uppercase;
+}
+
+h1 {
+  max-width: 780px;
+  margin: 0;
+  font-size: 68px;
+  line-height: 1.02;
+  letter-spacing: 0;
+  overflow-wrap: break-word;
+}
+
+.hero-title-line {
+  display: block;
+}
+
+.gold {
+  color: var(--gold-soft);
+}
+
+.hero-copy {
+  max-width: 650px;
+  margin: 20px 0 0;
+  color: #eee7da;
+  font-size: 19px;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  margin-top: 0;
+  padding: 12px 18px;
+  border-radius: 6px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--gold);
+  color: #111;
+}
+
+.btn-primary:hover,
+.booking button:hover,
+.contact-btn:hover {
+  transform: translateY(-2px);
+  background: var(--gold-soft);
+}
+
+.btn-outline {
+  border-color: rgba(255, 255, 255, 0.45);
+  color: var(--text);
+}
+
+.hero-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  gap: 1px;
+  width: min(720px, 100%);
+  margin-top: 44px;
+  border: 1px solid var(--line);
+  background: var(--line);
+}
+
+.hero-stat {
+  padding: 18px;
+  background: rgba(8, 8, 6, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.hero-stat strong {
+  display: block;
+  color: var(--gold-soft);
+  font-size: 22px;
+}
+
+.hero-stat span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.services,
+.gallery,
+.packages,
+.testimonials,
+.youtube,
+.booking,
+.contact {
+  padding: 92px 44px;
+  text-align: left;
+  background: var(--bg);
+}
+
+.section-head {
+  max-width: 1180px;
+  margin: 0 auto 34px;
+  display: flex;
+  justify-content: space-between;
+  gap: 28px;
+  align-items: flex-end;
+}
+
+.section-head h2,
+.services h2,
+.gallery h2,
+.packages h2,
+.testimonials h2,
+.youtube h2,
+.booking h2,
+.contact h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 36px;
+  line-height: 1.12;
+}
+
+.section-head p {
+  max-width: 440px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.grid,
+.gallery-grid,
+.package-grid,
+.testi-grid {
+  max-width: 1180px;
+}
+
+.grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.card,
+.package-card,
+.testi-card {
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: none;
+}
+
+.card {
+  min-height: 170px;
+  padding: 22px;
+  cursor: pointer;
+}
+
+.card h3,
+.package-card h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 19px;
+}
+
+.card p,
+.package-card p,
+.testi-card p {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.card span {
+  display: inline-block;
+  margin-bottom: 16px;
+  color: var(--gold-soft);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.card:hover,
+.package-card:hover,
+.testi-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(216, 178, 87, 0.46);
+  background: #171510;
+}
+
+.services > p {
+  max-width: 1180px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.gallery {
+  background: #0d0c0a;
+}
+
+.gallery-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.gallery-item {
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #15130f;
+}
+
+.gallery-grid img {
+  height: 320px;
+}
+
+.gallery-badge {
+  border-radius: 4px;
+  background: rgba(8, 8, 6, 0.84);
+  color: var(--gold-soft);
+  font-weight: 700;
+}
+
+.package-card {
+  padding: 28px;
+}
+
+.package-card h4 {
+  margin: 18px 0 0;
+  color: var(--gold-soft);
+  font-size: 26px;
+}
+
+.package-card ul {
+  padding: 0;
+  margin: 18px 0 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.package-card li {
+  padding: 8px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.highlight {
+  border-color: rgba(216, 178, 87, 0.72);
+  background: #19150d;
+}
+
+.testimonials {
+  background: var(--bg);
+}
+
+.testi-card::before {
+  content: none;
+}
+
+.testi-card h4 {
+  margin: 18px 0 0;
+  color: var(--text);
+}
+
+.feedback-panel,
+.booking form,
+.contact-panel {
+  max-width: 1180px;
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.feedback-panel {
+  margin-top: 38px;
+  padding: 26px;
+}
+
+.feedback-panel h3 {
+  margin: 0 0 18px;
+  font-size: 22px;
+}
+
+.feedback-grid,
+.booking form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.feedback-grid textarea {
+  grid-column: span 2;
+}
+
+.feedback-grid button,
+.booking button {
+  min-height: 48px;
+}
+
+input,
+textarea,
+.booking input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #0b0a08;
+  color: var(--text);
+  padding: 14px;
+  font: inherit;
+}
+
+textarea {
+  min-height: 48px;
+  resize: vertical;
+}
+
+.booking form {
+  max-width: 1180px;
+  padding: 18px;
+}
+
+.booking button,
+.feedback-grid button,
+.contact-btn {
+  border: 0;
+  border-radius: 6px;
+  background: var(--gold);
+  color: #111;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.youtube {
+  text-align: center;
+  background: #0d0c0a;
+}
+
+.youtube h2,
+.youtube p {
+  text-align: center;
+}
+
+.contact-panel {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 24px;
+  padding: 32px;
+}
+
+.contact p {
+  margin: 10px 0;
+}
+
+.contact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.whatsapp,
+#chat-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  animation: none;
+}
+
+#chatbox {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+@media (max-width: 980px) {
+  .navbar {
+    padding: 12px 18px;
+  }
+
+  .nav-links {
+    display: none;
+  }
+
+  .hero {
+    padding: 92px 20px 32px;
+    overflow: hidden;
+  }
+
+  .content,
+  .hero-copy,
+  h1 {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  h1 {
+    font-size: 46px;
+  }
+
+  .hero-copy {
+    font-size: 17px;
+  }
+
+  .hero-stats,
+  .grid,
+  .gallery-grid,
+  .package-grid,
+  .testi-grid,
+  .feedback-grid,
+  .booking form,
+  .contact-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .feedback-grid textarea {
+    grid-column: auto;
+  }
+
+  .section-head {
+    display: block;
+  }
+
+  .section-head p {
+    margin-top: 12px;
+  }
+
+  .services,
+  .gallery,
+  .packages,
+  .testimonials,
+  .youtube,
+  .booking,
+  .contact {
+    padding: 64px 20px;
+  }
+}
+
+@media (max-width: 560px) {
+  .brand span {
+    max-width: 210px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  h1 {
+    font-size: 38px;
+  }
+
+  .hero-kicker {
+    max-width: 100%;
+    font-size: 10px;
+    letter-spacing: 1px;
+    overflow-wrap: break-word;
+  }
+
+  .buttons {
+    display: grid;
+    width: 100%;
+  }
+
+  .gallery-grid img {
+    height: 260px;
+  }
+
+  .whatsapp {
+    left: 118px;
+    right: auto;
+    bottom: 12px;
+    width: 132px;
+    max-width: 132px;
+    padding: 12px 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  #chat-btn {
+    left: 12px;
+    bottom: 12px;
+    padding: 12px 14px;
+  }
+}
+
   </style>
 
 </head>
@@ -685,17 +1273,36 @@
 
     <div class="content">
 
+      <p class="hero-kicker">Wedding films, photography and live katha</p>
+
       <h1>
-        Jai Maa <span class="gold">Bhadrakali</span> Studio
+        <span class="hero-title-line">Jai Maa</span>
+        <span class="hero-title-line">Bhadrakali</span>
+        <span class="hero-title-line">Studio</span>
       </h1>
 
-      <p>
-        From Sacred Kathas to Timeless Memories — We Capture Every Moment.
+      <p class="hero-copy">
+        A Pratapgarh-based studio for weddings, pre-weddings, family events and devotional coverage, built around calm planning and reliable delivery.
       </p>
 
       <div class="buttons">
-        <a href="#booking" class="btn btn-primary">🎬 Book Now</a>
-        <a href="#gallery" class="btn btn-outline">📸 View Work</a>
+        <a href="#booking" class="btn btn-primary">Check Availability</a>
+        <a href="#gallery" class="btn btn-outline">View Portfolio</a>
+      </div>
+
+      <div class="hero-stats" aria-label="Studio highlights">
+        <div class="hero-stat">
+          <strong>9 AM-9 PM</strong>
+          <span>Booking support</span>
+        </div>
+        <div class="hero-stat">
+          <strong>UP + India</strong>
+          <span>Wedding and katha coverage</span>
+        </div>
+        <div class="hero-stat">
+          <strong>Photo + Video</strong>
+          <span>Albums, films and streaming</span>
+        </div>
       </div>
 
     </div>
@@ -705,41 +1312,81 @@
  <!-- SERVICES -->
 <section class="services" id="services">
 
-  <h2>Our Services</h2>
+  <div class="section-head">
+    <div>
+      <p class="section-kicker">Services</p>
+      <h2>Coverage for the full event, not just a few poses.</h2>
+    </div>
+    <p>Choose a focused service or combine photography, video, album design, drone and live streaming into one custom package.</p>
+  </div>
 
   <div class="grid">
 
-    <div class="card" onclick="loadCategory('prewedding')">Pre-Wedding Shoot</div>
+    <div class="card" onclick="loadCategory('prewedding')">
+      <span>01</span>
+      <h3>Pre-Wedding Shoot</h3>
+      <p>Location planning, couple portraits and short cinematic reels.</p>
+    </div>
 
-    <div class="card" onclick="loadCategory('candid')">Candid Photography</div>
+    <div class="card" onclick="loadCategory('candid')">
+      <span>02</span>
+      <h3>Candid Photography</h3>
+      <p>Natural moments, family emotions and guest interactions.</p>
+    </div>
 
-    <div class="card" onclick="loadCategory('fineart')">Fine Art / Editorial</div>
+    <div class="card" onclick="loadCategory('fineart')">
+      <span>03</span>
+      <h3>Fine Art / Editorial</h3>
+      <p>Portrait-led frames with a premium album-ready finish.</p>
+    </div>
 
-    <div class="card" onclick="loadCategory('cinematic')">Cinematic Highlights</div>
+    <div class="card" onclick="loadCategory('cinematic')">
+      <span>04</span>
+      <h3>Cinematic Highlights</h3>
+      <p>Story-based wedding films with music and clean edits.</p>
+    </div>
 
-    <div class="card" onclick="loadCategory('traditional')">Traditional Video</div>
+    <div class="card" onclick="loadCategory('traditional')">
+      <span>05</span>
+      <h3>Traditional Video</h3>
+      <p>Complete ceremony coverage for family records.</p>
+    </div>
 
-    <div class="card" onclick="loadCategory('katha')">Live Katha Streaming</div>
+    <div class="card" onclick="loadCategory('katha')">
+      <span>06</span>
+      <h3>Live Katha Streaming</h3>
+      <p>Devotional programs streamed for remote family and guests.</p>
+    </div>
 
-    <div class="card" onclick="loadCategory('album')">Wedding Album Design</div>
+    <div class="card" onclick="loadCategory('album')">
+      <span>07</span>
+      <h3>Wedding Album Design</h3>
+      <p>Print-ready layouts, photo selection and premium story flow.</p>
+    </div>
 
-    <div class="card">All Types of Photography</div>
+    <div class="card">
+      <span>08</span>
+      <h3>Family Events</h3>
+      <p>Birthdays, engagement, haldi, mehndi and private functions.</p>
+    </div>
 
   </div>
 
-  <p style="margin-top: 30px;">
-    Packages are customized based on your requirements & budget.
-  </p>
-
   <p style="margin-top: 20px;">
-    <a href="/services/" class="btn btn-primary">Open Full Services Page</a>
+    <a href="/services/" class="btn btn-primary">Explore Services</a>
   </p>
 
 </section>
   <!-- GALLERY -->
   <section class="gallery" id="gallery">
   
-    <h2>Our Work</h2>
+    <div class="section-head">
+      <div>
+        <p class="section-kicker">Portfolio</p>
+        <h2>Recent work from weddings, kathas and family events.</h2>
+      </div>
+      <p>Upload approved work from the admin panel and the newest images appear here automatically.</p>
+    </div>
   
     <div class="gallery-grid">
     
@@ -762,7 +1409,13 @@
   <!-- PACKAGES -->
 <section class="packages" id="packages">
 
-  <h2>Our Packages</h2>
+  <div class="section-head">
+    <div>
+      <p class="section-kicker">Packages</p>
+      <h2>Simple starting points, customized for your date and venue.</h2>
+    </div>
+    <p>Final pricing depends on team size, location, event duration, deliverables and travel.</p>
+  </div>
 
   <div class="package-grid">
 
@@ -770,18 +1423,33 @@
       <h3>Basic</h3>
       <p>Photography Only</p>
       <h4>₹25,000</h4>
+      <ul>
+        <li>Event photography coverage</li>
+        <li>Edited photo delivery</li>
+        <li>Best for small functions</li>
+      </ul>
     </div>
 
     <div class="package-card highlight">
       <h3>Standard</h3>
       <p>Photo + Video</p>
       <h4>₹45,000</h4>
+      <ul>
+        <li>Photo and traditional video</li>
+        <li>Cinematic highlight option</li>
+        <li>Best for wedding day coverage</li>
+      </ul>
     </div>
 
     <div class="package-card">
       <h3>Premium</h3>
       <p>All Services + Drone + Album</p>
       <h4>₹70,000</h4>
+      <ul>
+        <li>Photography, video and album</li>
+        <li>Drone on request</li>
+        <li>Best for multi-event bookings</li>
+      </ul>
     </div>
 
   </div>
@@ -790,7 +1458,13 @@
 <!-- TESTIMONIALS -->
 <section class="testimonials">
 
-  <h2>What Our Clients Say</h2>
+  <div class="section-head">
+    <div>
+      <p class="section-kicker">Reviews</p>
+      <h2>Client feedback after delivery.</h2>
+    </div>
+    <p>Testimonials remain hidden until approved in admin, keeping the public page clean and trustworthy.</p>
+  </div>
 
   <div class="testi-grid">
 
@@ -807,30 +1481,29 @@
   </div>
 
   <!-- 🔥 FEEDBACK FORM -->
-  <div style="margin-top:40px; text-align:center;">
+  <div class="feedback-panel">
     <h3>Give Your Feedback</h3>
 
-    <input type="text" id="fb-name" placeholder="Your Name"><br><br>
-
-    <textarea id="fb-message" placeholder="Your Feedback"></textarea><br><br>
-
-    <input type="number" id="fb-rating" min="1" max="5" value="5"><br><br>
-
-    <button onclick="submitFeedback()">Submit Feedback</button>
+    <div class="feedback-grid">
+      <input type="text" id="fb-name" placeholder="Your Name">
+      <textarea id="fb-message" placeholder="Your Feedback"></textarea>
+      <input type="number" id="fb-rating" min="1" max="5" value="5" aria-label="Rating">
+      <button onclick="submitFeedback()">Submit Feedback</button>
+    </div>
   </div>
 
 </section>
   <!-- YOUTUBE SECTION -->
 <section class="youtube">
 
-  <h2>Our Cinematic Work</h2>
+  <h2>Watch the studio film style</h2>
 
   <p>Watch our latest wedding films & live katha recordings</p>
 
   <div class="video-box">
     <a href="https://www.youtube.com/@arvindsrivastava9574
  " target="_blank" class="btn btn-primary">
-      Visit Our YouTube Channel
+      Visit YouTube Channel
     </a>
   </div>
 
@@ -838,7 +1511,13 @@
 <!-- BOOKING FORM -->
 <section class="booking" id="booking">
 
-  <h2>Book Your Shoot</h2>
+  <div class="section-head">
+    <div>
+      <p class="section-kicker">Booking</p>
+      <h2>Share your event details and continue on WhatsApp.</h2>
+    </div>
+    <p>Your inquiry is saved for follow-up, and WhatsApp opens with the details already filled.</p>
+  </div>
 
   <form id="bookingForm" onsubmit="sendToWhatsApp(event)">
 
@@ -855,17 +1534,25 @@
 <!-- CONTACT -->
 <section class="contact" id="contact">
 
-  <h2>Contact Us</h2>
-
-  <p>📞 9936759702</p>
-  <p>📞 7393982811</p>
-  <p>📍 Pratapgarh, Uttar Pradesh</p>
-
-  <a href="https://wa.me/919936759702?text=Hello%20I%20want%20to%20book%20a%20shoot"
-   target="_blank"
-   class="whatsapp">
-   💬 Chat Now
-</a>
+  <div class="contact-panel">
+    <div>
+      <p class="section-kicker">Contact</p>
+      <h2>Jai Maa Bhadrakali Studio</h2>
+      <p>Pratapgarh, Uttar Pradesh</p>
+      <p>Available for weddings, kathas, pre-weddings and family events.</p>
+    </div>
+    <div>
+      <p>Phone: 9936759702</p>
+      <p>Phone: 7393982811</p>
+      <div class="contact-actions">
+        <a href="https://wa.me/919936759702?text=Hello%20I%20want%20to%20book%20a%20shoot"
+          target="_blank"
+          class="contact-btn">
+          Chat on WhatsApp
+        </a>
+      </div>
+    </div>
+  </div>
 
 </section>
 <!-- 💬 CHAT BUTTON -->
@@ -884,12 +1571,16 @@
   <a href="https://wa.me/919936759702?text=Hello%20I%20want%20to%20book%20a%20shoot"
      target="_blank"
      class="whatsapp">
-     💬 Book on WhatsApp
+     💬 WhatsApp
   </a>
 <script>
-window.addEventListener("load", () => {
+function hidePageLoader() {
   document.getElementById("page-loader")?.classList.add("hidden");
-});
+}
+
+document.addEventListener("DOMContentLoaded", hidePageLoader);
+window.addEventListener("load", hidePageLoader);
+setTimeout(hidePageLoader, 1200);
 
 // =======================
 // ✅ WHATSAPP BOOKING
