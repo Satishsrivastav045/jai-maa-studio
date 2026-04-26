@@ -15,9 +15,9 @@ services:
       - key: DEBUG
         value: false
       - key: ALLOWED_HOSTS
-        value: "jai-maa-bhadrakali-studio.onrender.com"
+        value: "jai-maa-studio.onrender.com"
       - key: CSRF_TRUSTED_ORIGINS
-        value: "https://jai-maa-bhadrakali-studio.onrender.com"
+        value: "https://jai-maa-studio.onrender.com"
       - key: DATABASE_URL
         fromDatabase:
           name: jai-maa-bhadrakali-db
