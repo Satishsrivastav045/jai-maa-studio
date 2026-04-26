@@ -1,22 +1,18 @@
-from django.shortcuts import render
-from django.http import JsonResponse
-from django.utils.timezone import now
-from django.db.models import Count
-from django.views.decorators.csrf import csrf_exempt
-from .models import Testimonial
-
-
-
 import json
-import requests
 from difflib import get_close_matches
-# from googletrans import Translator
 
-from .models import Gallery, Booking, ChatData, UnknownQuestion
+from django.contrib.auth.decorators import login_required
+from django.db.models import Count
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.utils.timezone import now
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.http import require_GET, require_POST
+
+from .models import Booking, ChatData, Gallery, Testimonial, UnknownQuestion
 
 
 # 🌍 Translator
-
 
 
 def safe_detect_language(text):
@@ -24,6 +20,7 @@ def safe_detect_language(text):
         if '\u0900' <= ch <= '\u097F':
             return "hi"
     return "en"
+
 
 def safe_translate(text, dest):
     return text
@@ -113,6 +110,7 @@ def get_studio_reply(user_msg):
 # =========================
 # 🏠 HOME PAGE
 # =========================
+@ensure_csrf_cookie
 def home(request):
     images = (
         Gallery.objects.filter(image__isnull=False)
@@ -133,6 +131,7 @@ def services_page(request):
 # =========================
 # 📸 CATEGORY API
 # =========================
+@require_GET
 def get_category_images(request, category):
     images = Gallery.objects.filter(category=category).order_by('-id')
 
@@ -150,31 +149,33 @@ def get_category_images(request, category):
 # =========================
 # 💾 SAVE BOOKING
 # =========================
+@require_POST
 def save_booking(request):
-    if request.method == "POST":
-        name = request.POST.get("name")
-        phone = request.POST.get("phone")
-        event = request.POST.get("event")
-        event_date = request.POST.get("event_date")  # 🔥 FIX
+    name = request.POST.get("name", "").strip()
+    phone = request.POST.get("phone", "").strip()
+    event = request.POST.get("event", "").strip()
+    event_date = request.POST.get("event_date", "").strip()
 
-        if not name or not phone or not event:
-            return JsonResponse({"status": "error"})
+    if not name or not phone or not event:
+        return JsonResponse({"status": "error", "message": "Missing required fields"}, status=400)
 
-        Booking.objects.create(
-            name=name,
-            phone=phone,
-            event=event,
-            event_date=event_date
-        )
+    if not phone.isdigit() or len(phone) < 10 or len(phone) > 15:
+        return JsonResponse({"status": "error", "message": "Invalid phone number"}, status=400)
 
-        return JsonResponse({"status": "success"})
+    Booking.objects.create(
+        name=name[:100],
+        phone=phone,
+        event=event[:100],
+        event_date=event_date[:100],
+    )
 
-    return JsonResponse({"status": "error"})
+    return JsonResponse({"status": "success"})
 
 
 # =========================
 # 📊 DASHBOARD
 # =========================
+@login_required
 def dashboard(request):
     bookings = Booking.objects.all().order_by('-created_at')
 
@@ -198,87 +199,102 @@ def dashboard(request):
 # =========================
 # 🤖 MULTI-LANGUAGE AI CHATBOT (FINAL)
 # =========================
-@csrf_exempt
+@require_POST
 def chatbot_api(request):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            user_msg = data.get("message", "").lower()
+    try:
+        data = json.loads(request.body or "{}")
+        user_msg = data.get("message", "").strip().lower()
 
-            # =========================
-            # 🔥 1. DATABASE MATCH
-            # =========================
-            all_data = ChatData.objects.all()
-            questions = [item.question.lower() for item in all_data]
+        if not user_msg:
+            return JsonResponse({"reply": "Please type a message."}, status=400)
 
-            match = get_close_matches(user_msg, questions, n=1, cutoff=0.6)
+        # =========================
+        # 🔥 1. DATABASE MATCH
+        # =========================
+        all_data = ChatData.objects.all()
+        questions = [item.question.lower() for item in all_data]
 
-            if match:
-                for item in all_data:
-                    if item.question.lower() == match[0]:
-                        return JsonResponse({"reply": item.answer})
+        match = get_close_matches(user_msg, questions, n=1, cutoff=0.6)
 
-            # =========================
-            # 🔥 2. STUDIO REPLY
-            # =========================
-            studio_answer = get_studio_reply(user_msg)
-            if studio_answer:
-                return JsonResponse({"reply": studio_answer})
+        if match:
+            for item in all_data:
+                if item.question.lower() == match[0]:
+                    return JsonResponse({"reply": item.answer})
 
-            # =========================
-            # 🔥 3. SMART REPLIES
-            # =========================
-            if "booking" in user_msg:
-                answer = "📅 Booking ke liye WhatsApp button use kare."
+        # =========================
+        # 🔥 2. STUDIO REPLY
+        # =========================
+        studio_answer = get_studio_reply(user_msg)
+        if studio_answer:
+            return JsonResponse({"reply": studio_answer})
 
-            elif "price" in user_msg or "charge" in user_msg:
-                answer = "💰 Packages ₹25,000 se start hote hain."
+        # =========================
+        # 🔥 3. SMART REPLIES
+        # =========================
+        if "booking" in user_msg:
+            answer = "📅 Booking ke liye WhatsApp button use kare."
 
-            elif "foreign" in user_msg or "tourist" in user_msg:
-                answer = "🌍 We provide full Indian wedding experience including stay, food, travel."
+        elif "price" in user_msg or "charge" in user_msg:
+            answer = "💰 Packages ₹25,000 se start hote hain."
 
-            elif (
-                "album" in user_msg
-                or "photobook" in user_msg
-                or "layout" in user_msg
-                or "cover" in user_msg
-                or "pages" in user_msg
-            ):
-                answer = (
-                    "📒 Album design me Classic Royal, Minimal Premium, "
-                    "Storytelling Collage aur Cinematic Full-Page layouts available hain."
-                )
+        elif "foreign" in user_msg or "tourist" in user_msg:
+            answer = "🌍 We provide full Indian wedding experience including stay, food, travel."
 
-            else:
-                answer = "🙏 Ask about booking, wedding, album design or price."
+        elif (
+            "album" in user_msg
+            or "photobook" in user_msg
+            or "layout" in user_msg
+            or "cover" in user_msg
+            or "pages" in user_msg
+        ):
+            answer = (
+                "📒 Album design me Classic Royal, Minimal Premium, "
+                "Storytelling Collage aur Cinematic Full-Page layouts available hain."
+            )
 
-            # =========================
-            # 🧠 SAVE UNKNOWN
-            # =========================
-            UnknownQuestion.objects.create(question=user_msg)
+        else:
+            answer = "🙏 Ask about booking, wedding, album design or price."
 
-            return JsonResponse({"reply": answer})
+        # =========================
+        # 🧠 SAVE UNKNOWN
+        # =========================
+        UnknownQuestion.objects.create(question=user_msg[:255])
 
-        except Exception:
-            return JsonResponse({"reply": "Error, please try again."})
+        return JsonResponse({"reply": answer})
 
-    return JsonResponse({"reply": "Invalid request"})
+    except json.JSONDecodeError:
+        return JsonResponse({"reply": "Invalid message format."}, status=400)
 
-           
-@csrf_exempt
+
+
+@require_POST
 def submit_feedback(request):
-    if request.method == "POST":
-        data = json.loads(request.body)
+    try:
+        data = json.loads(request.body or "{}")
+    except json.JSONDecodeError:
+        return JsonResponse({"status": "error", "message": "Invalid request"}, status=400)
 
-        Testimonial.objects.create(
-            name=data.get("name"),
-            message=data.get("message"),
-            rating=data.get("rating", 5)
-        )
+    name = str(data.get("name", "")).strip()
+    message = str(data.get("message", "")).strip()
 
-        return JsonResponse({"status": "success"})
+    try:
+        rating = int(data.get("rating", 5))
+    except (TypeError, ValueError):
+        rating = 5
 
-    return JsonResponse({"status": "error"})
+    if not name or not message:
+        return JsonResponse({"status": "error", "message": "Missing required fields"}, status=400)
+
+    Testimonial.objects.create(
+        name=name[:100],
+        message=message,
+        rating=max(1, min(rating, 5)),
+    )
+
+    return JsonResponse({"status": "success"})
+
+
+@require_GET
 def gallery_view(request, category):
     images = Gallery.objects.filter(category=category).order_by('-id')
 

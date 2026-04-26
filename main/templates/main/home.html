@@ -902,13 +902,20 @@ function sendToWhatsApp(event) {
   let eventType = document.getElementById("event").value;
   let event_date = document.getElementById("event_date").value;
 
+  const formData = new URLSearchParams({
+    name: name,
+    phone: phone,
+    event: eventType,
+    event_date: event_date
+  });
+
   fetch("/save-booking/", {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
       "X-CSRFToken": getCookie("csrftoken")
     },
-   body: `name=${name}&phone=${phone}&event=${eventType}&event_date=${event_date}`
+   body: formData
   });
 
   let message = `Hello, I want to book a shoot.\nName: ${name}\nPhone: ${phone}\nEvent: ${eventType}\nDate: ${event_date}`;
@@ -1132,7 +1139,8 @@ function toggleChat() {
         let res = await fetch("/chatbot/", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken")
           },
           body: JSON.stringify({ message: msg })
         });
@@ -1166,7 +1174,8 @@ async function submitFeedback() {
   await fetch("/feedback/", {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      "X-CSRFToken": getCookie("csrftoken")
     },
     body: JSON.stringify({
       name: name,
