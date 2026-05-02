@@ -1,10 +1,11 @@
 import json
 from difflib import get_close_matches
+from urllib.parse import quote
 
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.utils.timezone import now
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
@@ -162,14 +163,50 @@ def save_booking(request):
     if not phone.isdigit() or len(phone) < 10 or len(phone) > 15:
         return JsonResponse({"status": "error", "message": "Invalid phone number"}, status=400)
 
-    Booking.objects.create(
+    booking = Booking.objects.create(
         name=name[:100],
         phone=phone,
         event=event[:100],
         event_date=event_date[:100],
     )
 
-    return JsonResponse({"status": "success"})
+    message = (
+        "Hello, I want to book a shoot.\n"
+        f"Name: {booking.name}\n"
+        f"Phone: {booking.phone}\n"
+        f"Event: {booking.event}\n"
+        f"Date: {booking.event_date}"
+    )
+    whatsapp_url = f"https://wa.me/919936759702?text={quote(message)}"
+
+    return JsonResponse({"status": "success", "whatsapp_url": whatsapp_url})
+
+
+@require_GET
+def check_availability(request):
+    event_date = request.GET.get("event_date", "").strip()
+
+    if not event_date:
+        return JsonResponse({"status": "error", "message": "Event date is required"}, status=400)
+
+    active_statuses = [Booking.STATUS_NEW, Booking.STATUS_CONFIRMED]
+    active_bookings = Booking.objects.filter(
+        event_date__iexact=event_date,
+        status__in=active_statuses,
+    )
+    available = not active_bookings.exists()
+
+    if available:
+        message = "Date available lag rahi hai. Booking confirm karne ke liye WhatsApp par details bhejein."
+    else:
+        message = "Is date par already inquiry/booking hai. Team final availability WhatsApp par confirm karegi."
+
+    return JsonResponse({
+        "status": "success",
+        "available": available,
+        "message": message,
+        "active_booking_count": active_bookings.count(),
+    })
 
 
 # =========================
@@ -193,6 +230,27 @@ def dashboard(request):
         "today": today,
         "labels": json.dumps(labels),
         "counts": json.dumps(counts),
+        "status_choices": Booking.STATUS_CHOICES,
+    })
+
+
+@login_required
+@require_POST
+def update_booking_status(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+    status = request.POST.get("status", "").strip()
+
+    valid_statuses = {choice[0] for choice in Booking.STATUS_CHOICES}
+    if status not in valid_statuses:
+        return JsonResponse({"status": "error", "message": "Invalid status"}, status=400)
+
+    booking.status = status
+    booking.save(update_fields=["status"])
+
+    return JsonResponse({
+        "status": "success",
+        "booking_status": booking.status,
+        "booking_status_label": booking.get_status_display(),
     })
 
 

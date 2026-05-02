@@ -1,5 +1,6 @@
 import json
 
+from django.contrib.auth.models import User
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
@@ -35,6 +36,36 @@ class PublicApiTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Booking.objects.count(), 1)
+        self.assertEqual(Booking.objects.get().status, Booking.STATUS_NEW)
+        self.assertIn("whatsapp_url", response.json())
+
+    def test_availability_reports_existing_active_booking(self):
+        Booking.objects.create(
+            name="Amit",
+            phone="9936759702",
+            event="Wedding",
+            event_date="2026-12-01",
+            status=Booking.STATUS_CONFIRMED,
+        )
+
+        response = self.client.get("/check-availability/?event_date=2026-12-01")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.json()["available"])
+
+    def test_availability_ignores_cancelled_booking(self):
+        Booking.objects.create(
+            name="Amit",
+            phone="9936759702",
+            event="Wedding",
+            event_date="2026-12-01",
+            status=Booking.STATUS_CANCELLED,
+        )
+
+        response = self.client.get("/check-availability/?event_date=2026-12-01")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["available"])
 
     def test_feedback_is_saved_pending_approval(self):
         response = self.client.post(
@@ -57,6 +88,25 @@ class PublicApiTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(UnknownQuestion.objects.count(), 1)
+
+    def test_logged_in_admin_can_update_booking_status(self):
+        User.objects.create_user(username="admin", password="pass12345", is_staff=True)
+        self.client.login(username="admin", password="pass12345")
+        booking = Booking.objects.create(
+            name="Amit",
+            phone="9936759702",
+            event="Wedding",
+            event_date="2026-12-01",
+        )
+
+        response = self.client.post(
+            f"/dashboard/bookings/{booking.id}/status/",
+            {"status": Booking.STATUS_CONFIRMED},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        booking.refresh_from_db()
+        self.assertEqual(booking.status, Booking.STATUS_CONFIRMED)
 
 
 @override_settings(SECURE_SSL_REDIRECT=False)

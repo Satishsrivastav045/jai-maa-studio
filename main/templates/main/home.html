@@ -998,6 +998,10 @@ h1 {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.package-card .btn {
+  margin-top: 18px;
+}
+
 .highlight {
   border-color: rgba(216, 178, 87, 0.72);
   background: #19150d;
@@ -1083,6 +1087,22 @@ textarea {
   color: #111;
   font-weight: 800;
   cursor: pointer;
+}
+
+.booking-status {
+  max-width: 1180px;
+  min-height: 22px;
+  margin: 12px auto 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.availability-status {
+  max-width: 1180px;
+  min-height: 22px;
+  margin: 8px auto 0;
+  color: var(--gold-soft);
+  font-size: 14px;
 }
 
 .youtube {
@@ -1428,6 +1448,7 @@ textarea {
         <li>Edited photo delivery</li>
         <li>Best for small functions</li>
       </ul>
+      <a href="#booking" class="btn btn-outline" onclick="selectPackage('Basic Photography')">Choose Basic</a>
     </div>
 
     <div class="package-card highlight">
@@ -1439,6 +1460,7 @@ textarea {
         <li>Cinematic highlight option</li>
         <li>Best for wedding day coverage</li>
       </ul>
+      <a href="#booking" class="btn btn-primary" onclick="selectPackage('Standard Photo + Video')">Choose Standard</a>
     </div>
 
     <div class="package-card">
@@ -1450,6 +1472,7 @@ textarea {
         <li>Drone on request</li>
         <li>Best for multi-event bookings</li>
       </ul>
+      <a href="#booking" class="btn btn-outline" onclick="selectPackage('Premium Photo + Video + Album')">Choose Premium</a>
     </div>
 
   </div>
@@ -1524,11 +1547,13 @@ textarea {
     <input type="text" id="name" placeholder="Your Name" required>
     <input type="tel" id="phone" placeholder="Phone Number" required>
     <input type="text" id="event" placeholder="Event Type (Wedding / Katha)" required>
-   <input type="text" id="event_date" placeholder="Event Date" required>
+   <input type="text" id="event_date" placeholder="Event Date" onblur="checkAvailability()" required>
 
     <button type="submit">Send on WhatsApp</button>
 
   </form>
+  <p id="availabilityStatus" class="availability-status" aria-live="polite"></p>
+  <p id="bookingStatus" class="booking-status" aria-live="polite"></p>
 
 </section>
 <!-- CONTACT -->
@@ -1585,13 +1610,22 @@ setTimeout(hidePageLoader, 1200);
 // =======================
 // ✅ WHATSAPP BOOKING
 // =======================
-function sendToWhatsApp(event) {
+function selectPackage(packageName) {
+  const eventInput = document.getElementById("event");
+  if (eventInput && !eventInput.value.trim()) {
+    eventInput.value = packageName;
+  }
+}
+
+async function sendToWhatsApp(event) {
   event.preventDefault();
 
-  let name = document.getElementById("name").value;
-  let phone = document.getElementById("phone").value;
-  let eventType = document.getElementById("event").value;
-  let event_date = document.getElementById("event_date").value;
+  const status = document.getElementById("bookingStatus");
+  const submitButton = document.querySelector("#bookingForm button[type='submit']");
+  let name = document.getElementById("name").value.trim();
+  let phone = document.getElementById("phone").value.trim();
+  let eventType = document.getElementById("event").value.trim();
+  let event_date = document.getElementById("event_date").value.trim();
 
   const formData = new URLSearchParams({
     name: name,
@@ -1600,19 +1634,61 @@ function sendToWhatsApp(event) {
     event_date: event_date
   });
 
-  fetch("/save-booking/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      "X-CSRFToken": getCookie("csrftoken")
-    },
-   body: formData
-  });
+  status.textContent = "Saving your inquiry...";
+  submitButton.disabled = true;
 
-  let message = `Hello, I want to book a shoot.\nName: ${name}\nPhone: ${phone}\nEvent: ${eventType}\nDate: ${event_date}`;
-  let url = `https://wa.me/919936759702?text=${encodeURIComponent(message)}`;
+  try {
+    const response = await fetch("/save-booking/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-CSRFToken": getCookie("csrftoken")
+      },
+      body: formData
+    });
 
-  window.open(url, "_blank");
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Booking could not be saved");
+    }
+
+    status.textContent = "Inquiry saved. Opening WhatsApp...";
+    window.open(data.whatsapp_url, "_blank");
+    document.getElementById("bookingForm").reset();
+  } catch (error) {
+    status.textContent = error.message || "Booking save nahi hui. Please try again.";
+  } finally {
+    submitButton.disabled = false;
+  }
+}
+
+async function checkAvailability() {
+  const dateInput = document.getElementById("event_date");
+  const availabilityStatus = document.getElementById("availabilityStatus");
+  const eventDate = dateInput.value.trim();
+
+  if (!eventDate) {
+    availabilityStatus.textContent = "";
+    return;
+  }
+
+  availabilityStatus.textContent = "Checking date availability...";
+
+  try {
+    const response = await fetch(`/check-availability/?event_date=${encodeURIComponent(eventDate)}`);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Availability check failed");
+    }
+
+    availabilityStatus.textContent = data.message;
+    availabilityStatus.style.color = data.available ? "var(--gold-soft)" : "#ffcc66";
+  } catch (error) {
+    availabilityStatus.textContent = "Availability abhi check nahi ho payi.";
+    availabilityStatus.style.color = "#ffcc66";
+  }
 }
 
 

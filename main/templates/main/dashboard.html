@@ -36,6 +36,33 @@
       color: gold;
     }
 
+    .status-select {
+      min-width: 130px;
+      padding: 8px;
+      border: 1px solid #333;
+      border-radius: 6px;
+      background: #0a0a0a;
+      color: white;
+    }
+
+    .status-pill {
+      display: inline-block;
+      min-width: 88px;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: rgba(255, 215, 0, 0.16);
+      color: gold;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    #saveStatus {
+      min-height: 22px;
+      text-align: center;
+      color: #bbb;
+      font-size: 14px;
+    }
+
     canvas {
       background: #111;
       padding: 10px;
@@ -84,6 +111,8 @@
 
 <canvas id="bookingChart" width="400" height="200"></canvas>
 
+<p id="saveStatus" aria-live="polite"></p>
+
 <table>
   <tr>
     <th>ID</th>
@@ -91,6 +120,7 @@
     <th>Phone</th>
     <th>Event</th>
     <th>Event date</th>
+    <th>Status</th>
 
     <th>Created</th>
   </tr>
@@ -102,12 +132,70 @@
     <td>{{ b.phone }}</td>
     <td>{{ b.event }}</td>
     <td>{{ b.event_date }}</td>
+    <td>
+      <select class="status-select" data-booking-id="{{ b.id }}" onchange="updateStatus(this)">
+        {% for value, label in status_choices %}
+          <option value="{{ value }}" {% if b.status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </td>
     <td>{{ b.created_at }}</td>
   </tr>
   {% endfor %}
 </table>
 
 <script>
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+async function updateStatus(select) {
+  const statusText = document.getElementById("saveStatus");
+  const bookingId = select.dataset.bookingId;
+  const previousValue = select.dataset.previousValue || select.value;
+  select.disabled = true;
+  statusText.textContent = "Saving booking status...";
+
+  try {
+    const response = await fetch(`/dashboard/bookings/${bookingId}/status/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-CSRFToken": getCookie("csrftoken")
+      },
+      body: new URLSearchParams({ status: select.value })
+    });
+
+    if (!response.ok) {
+      throw new Error("Status update failed");
+    }
+
+    const data = await response.json();
+    select.dataset.previousValue = data.booking_status;
+    statusText.textContent = `Booking #${bookingId} marked ${data.booking_status_label}.`;
+  } catch (error) {
+    select.value = previousValue;
+    statusText.textContent = "Status save nahi hua. Please try again.";
+  } finally {
+    select.disabled = false;
+  }
+}
+
+document.querySelectorAll(".status-select").forEach((select) => {
+  select.dataset.previousValue = select.value;
+});
+
 const labels = JSON.parse('{{ labels|escapejs }}');
 const counts = JSON.parse('{{ counts|escapejs }}');
 

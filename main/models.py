@@ -35,10 +35,24 @@ class Gallery(models.Model):
 # 📅 BOOKING
 # =========================
 class Booking(models.Model):
+    STATUS_NEW = "new"
+    STATUS_CONFIRMED = "confirmed"
+    STATUS_COMPLETED = "completed"
+    STATUS_CANCELLED = "cancelled"
+
+    STATUS_CHOICES = [
+        (STATUS_NEW, "New"),
+        (STATUS_CONFIRMED, "Confirmed"),
+        (STATUS_COMPLETED, "Completed"),
+        (STATUS_CANCELLED, "Cancelled"),
+    ]
+
     name = models.CharField(max_length=100)
-    phone = models.CharField(max_length=11)
+    phone = models.CharField(max_length=15)
     event = models.CharField(max_length=100)
     event_date = models.CharField(max_length=100)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_NEW)
+    notes = models.TextField(blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 

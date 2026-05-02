@@ -1,3 +1,5 @@
+from urllib.parse import quote
+
 from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.timezone import now
@@ -33,15 +35,16 @@ class GalleryAdmin(admin.ModelAdmin):
 # =========================
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ['id', 'name', 'phone', 'event', 'event_date', 'created_at', 'whatsapp']
+    list_display = ['id', 'name', 'phone', 'event', 'event_date', 'status', 'created_at', 'whatsapp']
     search_fields = ['name', 'phone', 'event']
-    list_filter = ['event', 'created_at']
+    list_filter = ['event', 'status', 'created_at']
+    list_editable = ['status']
     ordering = ['-created_at']
 
     # 💬 WhatsApp Button
     def whatsapp(self, obj):
-        msg = f"Hello {obj.name}, your booking is confirmed."
-        url = f"https://wa.me/{obj.phone}?text={msg}"
+        msg = f"Hello {obj.name}, your booking status is {obj.get_status_display()}."
+        url = f"https://wa.me/91{obj.phone[-10:]}?text={quote(msg)}"
         return format_html(
             '<a href="{}" target="_blank" style="color:green;">💬 WhatsApp</a>',
             url
