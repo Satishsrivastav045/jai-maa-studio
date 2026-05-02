@@ -35,11 +35,12 @@ class GalleryAdmin(admin.ModelAdmin):
 # =========================
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ['id', 'name', 'phone', 'event', 'event_date', 'status', 'created_at', 'whatsapp']
+    list_display = ['id', 'name', 'phone', 'event', 'event_date_value', 'status', 'advance_amount', 'payment_status', 'created_at', 'whatsapp']
     search_fields = ['name', 'phone', 'event']
-    list_filter = ['event', 'status', 'created_at']
+    list_filter = ['event', 'status', 'payment_status', 'event_date_value', 'created_at']
     list_editable = ['status']
     ordering = ['-created_at']
+    readonly_fields = ['created_at']
 
     # 💬 WhatsApp Button
     def whatsapp(self, obj):

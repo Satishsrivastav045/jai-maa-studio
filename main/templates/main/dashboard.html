@@ -2,147 +2,247 @@
 <html>
 <head>
   <title>Booking Dashboard</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
   <style>
+    :root {
+      --bg: #0a0a0a;
+      --panel: #111;
+      --line: #333;
+      --text: #fff;
+      --muted: #b9b9b9;
+      --gold: gold;
+    }
+
+    * { box-sizing: border-box; }
+
     body {
-      font-family: Arial;
-      background: #0a0a0a;
-      color: white;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
       padding: 20px;
     }
 
-    h1 {
-      text-align: center;
-    }
+    h1, h2 { text-align: center; }
+
+    a { color: inherit; }
 
     .stats {
-      display: flex;
-      gap: 20px;
-      justify-content: center;
-      margin-bottom: 30px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .card, .filters, .table-wrap {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
     }
 
     .card {
-      background: #111;
-      padding: 20px;
-      border-radius: 10px;
+      padding: 18px;
       text-align: center;
-      width: 200px;
     }
 
     .card h2 {
-      color: gold;
+      margin: 0;
+      color: var(--gold);
+    }
+
+    .card p { margin-bottom: 0; color: var(--muted); }
+
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+      padding: 14px;
+      margin-bottom: 24px;
+    }
+
+    input, select, textarea, button, .button-link {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #080808;
+      color: var(--text);
+      padding: 10px;
+      font: inherit;
+    }
+
+    button, .button-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--gold);
+      color: black;
+      border: 0;
+      cursor: pointer;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    textarea {
+      min-width: 220px;
+      min-height: 72px;
+      resize: vertical;
     }
 
     .status-select {
       min-width: 130px;
-      padding: 8px;
-      border: 1px solid #333;
-      border-radius: 6px;
-      background: #0a0a0a;
-      color: white;
-    }
-
-    .status-pill {
-      display: inline-block;
-      min-width: 88px;
-      padding: 5px 8px;
-      border-radius: 999px;
-      background: rgba(255, 215, 0, 0.16);
-      color: gold;
-      font-size: 12px;
-      font-weight: bold;
     }
 
     #saveStatus {
       min-height: 22px;
       text-align: center;
-      color: #bbb;
+      color: var(--muted);
       font-size: 14px;
     }
 
     canvas {
-      background: #111;
+      width: min(900px, 100%) !important;
+      height: auto !important;
+      background: var(--panel);
       padding: 10px;
-      border-radius: 10px;
+      border-radius: 8px;
       display: block;
       margin: auto;
     }
 
+    .table-wrap {
+      margin-top: 26px;
+      overflow-x: auto;
+    }
+
     table {
       width: 100%;
-      margin-top: 30px;
+      min-width: 1120px;
       border-collapse: collapse;
-      background: #111;
     }
 
     th, td {
       padding: 10px;
-      text-align: center;
-      border-bottom: 1px solid #333;
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
     }
 
     th {
-      background: gold;
+      background: var(--gold);
       color: black;
+    }
+
+    .inline-save {
+      margin-top: 8px;
+      min-width: 120px;
+    }
+
+    @media (max-width: 980px) {
+      body { padding: 12px; }
+      .filters { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 560px) {
+      .filters { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 
 <body>
-
-<h1>📊 Booking Dashboard</h1>
+<h1>Booking Dashboard</h1>
 
 <div class="stats">
   <div class="card">
     <h2>{{ total }}</h2>
-    <p>Total</p>
+    <p>Total Bookings</p>
   </div>
-
   <div class="card">
     <h2>{{ today }}</h2>
     <p>Today</p>
   </div>
+  <div class="card">
+    <h2>{{ confirmed }}</h2>
+    <p>Confirmed</p>
+  </div>
+  <div class="card">
+    <h2>₹{{ advance_total }}</h2>
+    <p>Advance Total</p>
+  </div>
 </div>
 
-<h2 style="text-align:center;">📊 Booking Analytics</h2>
+<form class="filters" method="get">
+  <input type="search" name="q" value="{{ filters.q }}" placeholder="Search name / phone / event">
+  <select name="status">
+    <option value="">All Status</option>
+    {% for value, label in status_choices %}
+      <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <input type="text" name="event" value="{{ filters.event }}" placeholder="Event type">
+  <input type="date" name="date_from" value="{{ filters.date_from }}">
+  <input type="date" name="date_to" value="{{ filters.date_to }}">
+  <button type="submit">Filter</button>
+  <a class="button-link" href="/dashboard/export/">Export CSV</a>
+</form>
 
+<h2>Booking Analytics</h2>
 <canvas id="bookingChart" width="400" height="200"></canvas>
 
 <p id="saveStatus" aria-live="polite"></p>
 
-<table>
-  <tr>
-    <th>ID</th>
-    <th>Name</th>
-    <th>Phone</th>
-    <th>Event</th>
-    <th>Event date</th>
-    <th>Status</th>
+<div class="table-wrap">
+  <table>
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Phone</th>
+      <th>Event</th>
+      <th>Event Date</th>
+      <th>Status</th>
+      <th>Advance</th>
+      <th>Payment</th>
+      <th>Notes</th>
+      <th>Created</th>
+      <th>Action</th>
+    </tr>
 
-    <th>Created</th>
-  </tr>
-
-  {% for b in bookings %}
-  <tr>
-    <td>{{ b.id }}</td>
-    <td>{{ b.name }}</td>
-    <td>{{ b.phone }}</td>
-    <td>{{ b.event }}</td>
-    <td>{{ b.event_date }}</td>
-    <td>
-      <select class="status-select" data-booking-id="{{ b.id }}" onchange="updateStatus(this)">
-        {% for value, label in status_choices %}
-          <option value="{{ value }}" {% if b.status == value %}selected{% endif %}>{{ label }}</option>
-        {% endfor %}
-      </select>
-    </td>
-    <td>{{ b.created_at }}</td>
-  </tr>
-  {% endfor %}
-</table>
+    {% for b in bookings %}
+    <tr>
+      <td>{{ b.id }}</td>
+      <td>{{ b.name }}</td>
+      <td><a href="https://wa.me/91{{ b.phone|slice:'-10:' }}" target="_blank">{{ b.phone }}</a></td>
+      <td>{{ b.event }}</td>
+      <td>{{ b.event_date_value|default:b.event_date }}</td>
+      <td>
+        <select class="status-select" data-booking-id="{{ b.id }}" onchange="updateStatus(this)">
+          {% for value, label in status_choices %}
+            <option value="{{ value }}" {% if b.status == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </td>
+      <td>
+        <input type="number" min="0" step="0.01" value="{{ b.advance_amount }}" data-field="advance_amount" data-booking-id="{{ b.id }}">
+      </td>
+      <td>
+        <input type="text" value="{{ b.payment_status }}" data-field="payment_status" data-booking-id="{{ b.id }}" placeholder="Pending / Paid">
+      </td>
+      <td>
+        <textarea data-field="notes" data-booking-id="{{ b.id }}" placeholder="Follow-up notes">{{ b.notes }}</textarea>
+      </td>
+      <td>{{ b.created_at }}</td>
+      <td>
+        <button class="inline-save" type="button" onclick="saveDetails({{ b.id }})">Save</button>
+      </td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="11">No bookings found.</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
 
 <script>
 function getCookie(name) {
@@ -177,9 +277,7 @@ async function updateStatus(select) {
       body: new URLSearchParams({ status: select.value })
     });
 
-    if (!response.ok) {
-      throw new Error("Status update failed");
-    }
+    if (!response.ok) throw new Error("Status update failed");
 
     const data = await response.json();
     select.dataset.previousValue = data.booking_status;
@@ -192,15 +290,39 @@ async function updateStatus(select) {
   }
 }
 
+async function saveDetails(bookingId) {
+  const statusText = document.getElementById("saveStatus");
+  const getField = (field) => document.querySelector(`[data-booking-id="${bookingId}"][data-field="${field}"]`);
+  statusText.textContent = "Saving booking details...";
+
+  try {
+    const response = await fetch(`/dashboard/bookings/${bookingId}/details/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-CSRFToken": getCookie("csrftoken")
+      },
+      body: new URLSearchParams({
+        advance_amount: getField("advance_amount").value,
+        payment_status: getField("payment_status").value,
+        notes: getField("notes").value
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || "Details save failed");
+    statusText.textContent = data.message;
+  } catch (error) {
+    statusText.textContent = error.message || "Details save nahi hui. Please try again.";
+  }
+}
+
 document.querySelectorAll(".status-select").forEach((select) => {
   select.dataset.previousValue = select.value;
 });
 
 const labels = JSON.parse('{{ labels|escapejs }}');
 const counts = JSON.parse('{{ counts|escapejs }}');
-
-console.log(labels, counts); // debug
-
 const ctx = document.getElementById('bookingChart');
 
 new Chart(ctx, {

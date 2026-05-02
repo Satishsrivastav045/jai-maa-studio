@@ -4,6 +4,8 @@
 <html>
 <head>
   <title>Services | Bhadrakali Studio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Explore Jai Maa Bhadrakali Studio services: wedding photography, pre-wedding shoots, cinematic highlights, traditional video, live katha streaming and album design.">
   <link rel="icon" type="image/jpeg" href="{% static 'main/logo.jpeg' %}">
   <style>
     html {
@@ -64,6 +66,17 @@
     .nav-links a.active {
       background: gold;
       color: black;
+    }
+    .menu-toggle {
+      display: none;
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      color: white;
+      font-size: 22px;
+      cursor: pointer;
     }
     #page-loader {
       position: fixed;
@@ -220,7 +233,25 @@
         font-size: 17px;
       }
       .nav-links {
+        display: none;
+        position: absolute;
+        top: 68px;
+        left: 16px;
+        right: 16px;
+        padding: 12px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.96);
+        border: 1px solid rgba(255, 215, 0, 0.18);
         gap: 8px;
+      }
+      .nav-links.open {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+      .menu-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
       }
       .nav-links a {
         padding: 7px 10px;
@@ -256,6 +287,7 @@
       <a href="/#packages">Packages</a>
       <a href="/#contact">Contact</a>
     </div>
+    <button class="menu-toggle" type="button" onclick="toggleMenu()" aria-label="Open menu">☰</button>
   </nav>
 
   <section class="hero">
@@ -352,6 +384,10 @@
   </div>
 
   <script>
+    function toggleMenu() {
+      document.querySelector(".nav-links")?.classList.toggle("open");
+    }
+
     window.addEventListener("load", () => {
       document.getElementById("page-loader")?.classList.add("hidden");
     });

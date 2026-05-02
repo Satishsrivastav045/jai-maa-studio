@@ -5,6 +5,10 @@
 <head>
   <title>Bhadrakali Studio</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Jai Maa Bhadrakali Studio offers wedding photography, pre-wedding shoots, cinematic video, album design and live katha streaming in Uttar Pradesh and across India.">
+  <meta property="og:title" content="Jai Maa Bhadrakali Studio">
+  <meta property="og:description" content="Wedding photography, video, albums and live katha streaming with direct WhatsApp booking.">
+  <meta property="og:type" content="website">
   <link rel="icon" type="image/jpeg" href="{% static 'main/logo.jpeg' %}">
 
   <style>
@@ -69,6 +73,17 @@
     .nav-links a:hover {
       background: gold;
       color: black;
+    }
+    .menu-toggle {
+      display: none;
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      color: white;
+      font-size: 22px;
+      cursor: pointer;
     }
     #page-loader {
       position: fixed;
@@ -1154,6 +1169,25 @@ textarea {
 
   .nav-links {
     display: none;
+    position: absolute;
+    top: 68px;
+    left: 18px;
+    right: 18px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(8, 8, 6, 0.98);
+  }
+
+  .nav-links.open {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .menu-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .hero {
@@ -1282,6 +1316,7 @@ textarea {
       <a href="#packages">Packages</a>
       <a href="#contact">Contact</a>
     </div>
+    <button class="menu-toggle" type="button" onclick="toggleMenu()" aria-label="Open menu">☰</button>
   </nav>
 
   <!-- HERO -->
@@ -1547,7 +1582,7 @@ textarea {
     <input type="text" id="name" placeholder="Your Name" required>
     <input type="tel" id="phone" placeholder="Phone Number" required>
     <input type="text" id="event" placeholder="Event Type (Wedding / Katha)" required>
-   <input type="text" id="event_date" placeholder="Event Date" onblur="checkAvailability()" required>
+   <input type="date" id="event_date" onblur="checkAvailability()" required>
 
     <button type="submit">Send on WhatsApp</button>
 
@@ -1569,12 +1604,16 @@ textarea {
     <div>
       <p>Phone: 9936759702</p>
       <p>Phone: 7393982811</p>
+      <p>
+        <a href="https://www.google.com/maps/search/?api=1&query=Pratapgarh%20Uttar%20Pradesh%20Jai%20Maa%20Bhadrakali%20Studio" target="_blank">Open Google Map</a>
+      </p>
       <div class="contact-actions">
         <a href="https://wa.me/919936759702?text=Hello%20I%20want%20to%20book%20a%20shoot"
           target="_blank"
           class="contact-btn">
           Chat on WhatsApp
         </a>
+        <a href="https://www.youtube.com/@arvindsrivastava9574" target="_blank" class="contact-btn">YouTube</a>
       </div>
     </div>
   </div>
@@ -1601,6 +1640,10 @@ textarea {
 <script>
 function hidePageLoader() {
   document.getElementById("page-loader")?.classList.add("hidden");
+}
+
+function toggleMenu() {
+  document.querySelector(".nav-links")?.classList.toggle("open");
 }
 
 document.addEventListener("DOMContentLoaded", hidePageLoader);
@@ -1815,124 +1858,32 @@ function toggleChat() {
 
 
 
-   async function handleChat(event) {
+async function handleChat(event) {
+  const input = document.getElementById("chat-input");
 
-  let input = document.getElementById("chat-input");
-
-  // 🔥 Enter + empty check
   if (event.key === "Enter" && input.value.trim() !== "") {
+    const msg = input.value.trim();
+    input.value = "";
 
-    let msg = input.value;
-    let msgLower = msg.toLowerCase();
-
-    input.value = ""; // ✅ clear input
-
-    let body = document.getElementById("chat-body");
-
+    const body = document.getElementById("chat-body");
     body.innerHTML += `<p><b>You:</b> ${msg}</p>`;
 
-    let reply = "";
+    try {
+      const res = await fetch("/chatbot/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCookie("csrftoken")
+        },
+        body: JSON.stringify({ message: msg })
+      });
 
-    // =========================
-    // 🔥 FAST SMART REPLIES
-    // =========================
-    if (msgLower.includes("booking") || msgLower.includes("book")) {
-      reply = "📅 Booking ke liye WhatsApp button use kare.\nYou can book via WhatsApp.";
-    }
-    else if (msgLower.includes("price") || msgLower.includes("charge")) {
-      reply = "💰 Packages ₹25,000 se start hote hain.";
-    }
-    else if (msgLower.includes("foreign") || msgLower.includes("tourist")) {
-      reply = "🌍 We provide full Indian wedding experience including food, stay, travel & rituals.";
-    }
-    else if (msgLower.includes("food") || msgLower.includes("khana")) {
-      reply = "🍛 Indian traditional food available.";
-    }
-    else if (msgLower.includes("airport")) {
-      reply = "✈️ Airport pickup & drop available.";
-    }
-    else if (msgLower.includes("stay") || msgLower.includes("hotel")) {
-      reply = "🏨 Comfortable stay available.";
-    }
-    else if (msgLower.includes("working hours") || msgLower.includes("timing") || msgLower.includes("open") || msgLower.includes("available time") || msgLower.includes("hours")) {
-      reply = "🕘 Hum 9:00 AM se 9:00 PM tak available hain.";
-    }
-    else if (msgLower.includes("service area") || msgLower.includes("where do you work") || msgLower.includes("where are you from") || msgLower.includes("city") || msgLower.includes("village") || msgLower.includes("location")) {
-      reply = "📍 Wedding, pre-wedding, photography, videography, album design aur event coverage mainly Uttar Pradesh me available hai. Katha aur live streaming all over India available hai.";
-    }
-    else if (msgLower.includes("outstation") || msgLower.includes("destination") || msgLower.includes("travel") || msgLower.includes("outside city") || msgLower.includes("outside state")) {
-      reply = "🚗 Haan, outstation shoot available hai. Travel, stay aur location-based charges apply ho sakte hain.";
-    }
-    else if (msgLower.includes("drone")) {
-      reply = "🚁 Drone service request ya custom package par available hai.";
-    }
-    else if (msgLower.includes("live streaming") || msgLower.includes("streaming") || msgLower.includes("live video") || msgLower.includes("live katha") || msgLower.includes("katha")) {
-      reply = "📡 Haan, live katha streaming karte hain. All over India coverage available hai.";
-    }
-    else if (msgLower.includes("pricing") || msgLower.includes("package") || msgLower.includes("cost") || msgLower.includes("charge") || msgLower.includes("price")) {
-      reply = "💰 Packages event, location aur coverage ke hisaab se custom hote hain. Photography packages generally ₹25,000 se start hote hain. Photo + video, pre-wedding, album design, drone, extra hours, travel aur outstation charges alag ho sakte hain.";
-    }
-    else if (msgLower.includes("services") || msgLower.includes("services list") || msgLower.includes("services do") || msgLower.includes("what services") || msgLower.includes("dete ho") || msgLower.includes("offer") || msgLower.includes("provide")) {
-      reply = "🎬 Hum pre-wedding shoot, wedding photography, wedding videography, candid photography, cinematic video, album design, live katha streaming aur all types of event coverage provide karte hain.";
-    }
-    else if (msgLower.includes("photographer") || msgLower.includes("photographers") || msgLower.includes("team") || msgLower.includes("crew") || msgLower.includes("kitne photographer")) {
-      reply = "📸 Team size event aur package ke hisaab se decide hota hai. Usually photographer aur videographer ki proper team available hoti hai.";
-    }
-    else if (msgLower.includes("booking") || msgLower.includes("book") || msgLower.includes("advance") || msgLower.includes("payment") || msgLower.includes("confirm") || msgLower.includes("cancel") || msgLower.includes("refund")) {
-      reply = "📅 Booking WhatsApp ya call par hoti hai. Date lock karne ke liye advance required hota hai. Payment UPI, cash ya bank transfer se le sakte hain. Booking advance receive hone par confirm hoti hai.";
-    }
-    else if (msgLower.includes("delivery") || msgLower.includes("deliver") || msgLower.includes("raw photo") || msgLower.includes("raw video") || msgLower.includes("album ready") || msgLower.includes("photos kitne din") || msgLower.includes("video kitne din")) {
-      reply = "📦 Photos usually 7-15 working days, video 15-30 working days aur album 30-45 days me ready ho jata hai. Raw photos/video request ya package ke hisaab se share kiye ja sakte hain.";
-    }
-    else if (msgLower.includes("album me kitni photos") || msgLower.includes("album photos") || msgLower.includes("album pages") || msgLower.includes("album size")) {
-      reply = "📒 Album me photos aur pages package aur album size ke hisaab se customize hote hain. Final count shoot coverage aur selected album design par depend karta hai.";
-    }
-    else if (msgLower.includes("wedding") || msgLower.includes("engagement") || msgLower.includes("haldi") || msgLower.includes("mehndi") || msgLower.includes("birthday") || msgLower.includes("katha") || msgLower.includes("other functions") || msgLower.includes("event")) {
-      reply = "✨ Wedding, engagement, haldi, mehndi, birthday, katha aur other family events sab cover karte hain. Har event ke liye custom package available hai.";
-    }
-    else if (msgLower.includes("whatsapp") || msgLower.includes("contact") || msgLower.includes("call") || msgLower.includes("number")) {
-      reply = "📲 WhatsApp par directly contact karke booking aur details le sakte hain.";
-    }
-    else if (
-      msgLower.includes("album") ||
-      msgLower.includes("photobook") ||
-      msgLower.includes("album design") ||
-      msgLower.includes("layout") ||
-      msgLower.includes("cover") ||
-      msgLower.includes("pages")
-    ) {
-      reply = "📒 Album design me Classic Royal, Minimal Premium, Storytelling Collage aur Cinematic Full-Page layouts available hain. Aap photos bhejo, hum print-ready design bana denge.";
-    }
-    else if (msgLower.includes("tone") || msgLower.includes("language") || msgLower.includes("short reply") || msgLower.includes("detailed")) {
-      reply = "💬 Reply Hindi/Hinglish me friendly aur simple style me diya jata hai. Zarurat par short ya detailed dono type ke answers mil sakte hain.";
+      const data = await res.json();
+      body.innerHTML += `<p><b>Bot:</b> ${data.reply || "🙏 Ask about booking, wedding, album design or price."}</p>`;
+    } catch {
+      body.innerHTML += "<p><b>Bot:</b> Server error, try again.</p>";
     }
 
-    // =========================
-    // 🤖 AI FALLBACK (IMPORTANT)
-    // =========================
-    else {
-      try {
-        let res = await fetch("/chatbot/", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": getCookie("csrftoken")
-          },
-          body: JSON.stringify({ message: msg })
-        });
-
-        let data = await res.json();
-        reply = data.reply || "🙏 Ask about booking, wedding, album design or price.";
-
-      } catch {
-        reply = "⚠️ Server error, try again.";
-      }
-    }
-
-    // =========================
-    // ✅ FINAL OUTPUT
-    // =========================
-    body.innerHTML += `<p><b>Bot:</b> ${reply}</p>`;
     body.scrollTop = body.scrollHeight;
   }
 }

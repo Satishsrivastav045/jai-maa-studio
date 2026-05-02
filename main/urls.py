@@ -11,6 +11,8 @@ urlpatterns = [
     path('category/<str:category>/', views.get_category_images),
     path('dashboard/', views.dashboard),
     path('dashboard/bookings/<int:booking_id>/status/', views.update_booking_status),
+    path('dashboard/bookings/<int:booking_id>/details/', views.update_booking_details),
+    path('dashboard/export/', views.export_bookings_csv),
 
     # 🤖 chatbot
     path('chatbot/', views.chatbot_api),

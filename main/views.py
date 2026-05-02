@@ -1,16 +1,33 @@
 import json
+import csv
+from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from difflib import get_close_matches
 from urllib.parse import quote
 
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count
-from django.http import JsonResponse
+from django.db.models import Count, Q, Sum
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.utils.timezone import now
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
 
 from .models import Booking, ChatData, Gallery, Testimonial, UnknownQuestion
+
+
+def parse_event_date(value):
+    value = (value or "").strip()
+    if not value:
+        return None
+
+    for date_format in ("%Y-%m-%d", "%d-%m-%Y", "%d/%m/%Y", "%d %B %Y", "%d %b %Y"):
+        try:
+            return datetime.strptime(value, date_format).date()
+        except ValueError:
+            continue
+
+    return None
 
 
 # 🌍 Translator
@@ -157,7 +174,7 @@ def save_booking(request):
     event = request.POST.get("event", "").strip()
     event_date = request.POST.get("event_date", "").strip()
 
-    if not name or not phone or not event:
+    if not name or not phone or not event or not event_date:
         return JsonResponse({"status": "error", "message": "Missing required fields"}, status=400)
 
     if not phone.isdigit() or len(phone) < 10 or len(phone) > 15:
@@ -168,6 +185,7 @@ def save_booking(request):
         phone=phone,
         event=event[:100],
         event_date=event_date[:100],
+        event_date_value=parse_event_date(event_date),
     )
 
     message = (
@@ -190,10 +208,12 @@ def check_availability(request):
         return JsonResponse({"status": "error", "message": "Event date is required"}, status=400)
 
     active_statuses = [Booking.STATUS_NEW, Booking.STATUS_CONFIRMED]
-    active_bookings = Booking.objects.filter(
-        event_date__iexact=event_date,
-        status__in=active_statuses,
-    )
+    parsed_date = parse_event_date(event_date)
+    active_bookings = Booking.objects.filter(status__in=active_statuses)
+    if parsed_date:
+        active_bookings = active_bookings.filter(event_date_value=parsed_date)
+    else:
+        active_bookings = active_bookings.filter(event_date__iexact=event_date)
     available = not active_bookings.exists()
 
     if available:
@@ -214,12 +234,43 @@ def check_availability(request):
 # =========================
 @login_required
 def dashboard(request):
-    bookings = Booking.objects.all().order_by('-created_at')
+    bookings = Booking.objects.all()
+    search = request.GET.get("q", "").strip()
+    status_filter = request.GET.get("status", "").strip()
+    event_filter = request.GET.get("event", "").strip()
+    date_from = parse_event_date(request.GET.get("date_from", ""))
+    date_to = parse_event_date(request.GET.get("date_to", ""))
+
+    if search:
+        bookings = bookings.filter(
+            Q(name__icontains=search)
+            | Q(phone__icontains=search)
+            | Q(event__icontains=search)
+            | Q(notes__icontains=search)
+        )
+
+    if status_filter:
+        bookings = bookings.filter(status=status_filter)
+
+    if event_filter:
+        bookings = bookings.filter(event__icontains=event_filter)
+
+    if date_from:
+        bookings = bookings.filter(event_date_value__gte=date_from)
+
+    if date_to:
+        bookings = bookings.filter(event_date_value__lte=date_to)
+
+    bookings = bookings.order_by('-created_at')
 
     total = Booking.objects.count()
     today = Booking.objects.filter(created_at__date=now().date()).count()
+    confirmed = Booking.objects.filter(status=Booking.STATUS_CONFIRMED).count()
+    pending_amount = Booking.objects.exclude(status=Booking.STATUS_CANCELLED).aggregate(
+        total=Sum("advance_amount")
+    )["total"] or 0
 
-    event_data = Booking.objects.values('event').annotate(count=Count('event'))
+    event_data = bookings.values('event').annotate(count=Count('event'))
 
     labels = [e['event'] for e in event_data]
     counts = [e['count'] for e in event_data]
@@ -228,9 +279,18 @@ def dashboard(request):
         "bookings": bookings,
         "total": total,
         "today": today,
+        "confirmed": confirmed,
+        "advance_total": pending_amount,
         "labels": json.dumps(labels),
         "counts": json.dumps(counts),
         "status_choices": Booking.STATUS_CHOICES,
+        "filters": {
+            "q": search,
+            "status": status_filter,
+            "event": event_filter,
+            "date_from": request.GET.get("date_from", ""),
+            "date_to": request.GET.get("date_to", ""),
+        },
     })
 
 
@@ -252,6 +312,67 @@ def update_booking_status(request, booking_id):
         "booking_status": booking.status,
         "booking_status_label": booking.get_status_display(),
     })
+
+
+@login_required
+@require_POST
+def update_booking_details(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+    notes = request.POST.get("notes", "").strip()
+    payment_status = request.POST.get("payment_status", "").strip()
+    advance_amount = request.POST.get("advance_amount", "0").strip() or "0"
+
+    try:
+        parsed_amount = Decimal(advance_amount)
+    except InvalidOperation:
+        return JsonResponse({"status": "error", "message": "Invalid advance amount"}, status=400)
+
+    if parsed_amount < 0:
+        return JsonResponse({"status": "error", "message": "Advance amount cannot be negative"}, status=400)
+
+    booking.notes = notes[:1000]
+    booking.payment_status = payment_status[:50]
+    booking.advance_amount = parsed_amount
+    booking.save(update_fields=["notes", "payment_status", "advance_amount"])
+
+    return JsonResponse({"status": "success", "message": "Booking details saved"})
+
+
+@login_required
+@require_GET
+def export_bookings_csv(request):
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = 'attachment; filename="bookings.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow([
+        "ID",
+        "Name",
+        "Phone",
+        "Event",
+        "Event Date",
+        "Status",
+        "Advance Amount",
+        "Payment Status",
+        "Notes",
+        "Created",
+    ])
+
+    for booking in Booking.objects.all().order_by("-created_at"):
+        writer.writerow([
+            booking.id,
+            booking.name,
+            booking.phone,
+            booking.event,
+            booking.event_date_value or booking.event_date,
+            booking.get_status_display(),
+            booking.advance_amount,
+            booking.payment_status,
+            booking.notes,
+            booking.created_at,
+        ])
+
+    return response
 
 
 # =========================

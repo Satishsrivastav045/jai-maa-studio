@@ -36,7 +36,9 @@ class PublicApiTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Booking.objects.count(), 1)
-        self.assertEqual(Booking.objects.get().status, Booking.STATUS_NEW)
+        booking = Booking.objects.get()
+        self.assertEqual(booking.status, Booking.STATUS_NEW)
+        self.assertEqual(str(booking.event_date_value), "2026-12-01")
         self.assertIn("whatsapp_url", response.json())
 
     def test_availability_reports_existing_active_booking(self):
@@ -45,6 +47,7 @@ class PublicApiTests(TestCase):
             phone="9936759702",
             event="Wedding",
             event_date="2026-12-01",
+            event_date_value="2026-12-01",
             status=Booking.STATUS_CONFIRMED,
         )
 
@@ -59,6 +62,7 @@ class PublicApiTests(TestCase):
             phone="9936759702",
             event="Wedding",
             event_date="2026-12-01",
+            event_date_value="2026-12-01",
             status=Booking.STATUS_CANCELLED,
         )
 
@@ -97,6 +101,7 @@ class PublicApiTests(TestCase):
             phone="9936759702",
             event="Wedding",
             event_date="2026-12-01",
+            event_date_value="2026-12-01",
         )
 
         response = self.client.post(
@@ -107,6 +112,49 @@ class PublicApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         booking.refresh_from_db()
         self.assertEqual(booking.status, Booking.STATUS_CONFIRMED)
+
+    def test_logged_in_admin_can_update_booking_details(self):
+        User.objects.create_user(username="admin", password="pass12345", is_staff=True)
+        self.client.login(username="admin", password="pass12345")
+        booking = Booking.objects.create(
+            name="Amit",
+            phone="9936759702",
+            event="Wedding",
+            event_date="2026-12-01",
+            event_date_value="2026-12-01",
+        )
+
+        response = self.client.post(
+            f"/dashboard/bookings/{booking.id}/details/",
+            {
+                "advance_amount": "5000",
+                "payment_status": "Advance Paid",
+                "notes": "Call again next week",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        booking.refresh_from_db()
+        self.assertEqual(booking.advance_amount, 5000)
+        self.assertEqual(booking.payment_status, "Advance Paid")
+        self.assertEqual(booking.notes, "Call again next week")
+
+    def test_logged_in_admin_can_export_bookings_csv(self):
+        User.objects.create_user(username="admin", password="pass12345", is_staff=True)
+        self.client.login(username="admin", password="pass12345")
+        Booking.objects.create(
+            name="Amit",
+            phone="9936759702",
+            event="Wedding",
+            event_date="2026-12-01",
+            event_date_value="2026-12-01",
+        )
+
+        response = self.client.get("/dashboard/export/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/csv")
+        self.assertIn(b"Amit", response.content)
 
 
 @override_settings(SECURE_SSL_REDIRECT=False)

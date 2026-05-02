@@ -3,16 +3,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>{{ category }}</title>
+  <title>{{ category|title }} Gallery | Jai Maa Bhadrakali Studio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="View {{ category|title }} photography and video work by Jai Maa Bhadrakali Studio.">
   <link rel="icon" type="image/jpeg" href="{% static 'main/logo.jpeg' %}">
 
   <style>
+    * { box-sizing: border-box; }
+
     body {
       margin: 0;
       padding-top: 78px;
-      background: black;
+      background: #050505;
       color: white;
-      font-family: Arial;
+      font-family: Arial, sans-serif;
       text-align: center;
     }
 
@@ -31,8 +35,7 @@
       justify-content: space-between;
       align-items: center;
       padding: 14px 24px;
-      box-sizing: border-box;
-      background: rgba(0, 0, 0, 0.82);
+      background: rgba(0, 0, 0, 0.86);
       backdrop-filter: blur(10px);
       border-bottom: 1px solid rgba(255, 215, 0, 0.18);
     }
@@ -63,13 +66,25 @@
 
     .nav-links a {
       padding: 8px 14px;
-      border-radius: 999px;
+      border-radius: 6px;
       transition: 0.3s;
     }
 
     .nav-links a:hover {
       background: gold;
       color: black;
+    }
+
+    .menu-toggle {
+      display: none;
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      color: white;
+      font-size: 22px;
+      cursor: pointer;
     }
 
     #page-loader {
@@ -79,9 +94,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background:
-        radial-gradient(circle at top, rgba(212, 175, 55, 0.2), transparent 34%),
-        linear-gradient(180deg, #090909 0%, #000000 100%);
+      background: linear-gradient(180deg, #090909 0%, #000000 100%);
       transition: opacity 0.35s ease, visibility 0.35s ease;
     }
 
@@ -97,11 +110,9 @@
       align-items: center;
       gap: 16px;
       padding: 28px 32px;
-      border-radius: 24px;
+      border-radius: 14px;
       background: rgba(0, 0, 0, 0.45);
       border: 1px solid rgba(255, 215, 0, 0.18);
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
-      backdrop-filter: blur(12px);
     }
 
     .loader-logo {
@@ -110,7 +121,6 @@
       border-radius: 50%;
       object-fit: cover;
       border: 2px solid rgba(255, 215, 0, 0.35);
-      animation: loaderPulse 1.4s ease-in-out infinite;
     }
 
     .loader-text {
@@ -121,99 +131,135 @@
       color: #f5e6a4;
     }
 
-    .loader-spinner {
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      border: 3px solid rgba(255, 215, 0, 0.22);
-      border-top-color: gold;
-      animation: spin 0.9s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    @keyframes loaderPulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.06); }
-    }
-
     h1 {
-      padding: 18px 20px 10px;
+      padding: 22px 20px 10px;
       text-transform: capitalize;
     }
 
     .gallery {
-  column-count: 3;
-  column-gap: 15px;
-  padding: 20px;
-}
+      column-count: 3;
+      column-gap: 15px;
+      padding: 20px;
+    }
 
-.gallery-item {
-  break-inside: avoid;
-  margin-bottom: 15px;
-  position: relative;
-}
+    .gallery-item {
+      break-inside: avoid;
+      margin-bottom: 15px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 10px;
+      background: #111;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
 
-.gallery img, .video-item {
-  width: 100%;
-  border-radius: 15px;
-  transition: 0.3s;
-  display: block; 
-}
+    .gallery img,
+    .gallery video {
+      width: 100%;
+      border-radius: 10px;
+      transition: 0.3s;
+      display: block;
+    }
 
-.gallery img:hover, .video-item:hover {
-  transform: scale(1.05);
-}
+    .gallery img {
+      cursor: zoom-in;
+    }
 
-/* overlay */
-.overlay {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  background: rgba(0,0,0,0.6);
-  color: white;
-  text-align: center;
-  opacity: 0;
-  transition: 0.2s;
-  border-radius: 0 0 15px 15px;
-}
+    .gallery img:hover,
+    .gallery video:hover {
+      transform: scale(1.03);
+    }
 
-.gallery-item:hover .overlay {
-  opacity: 1;
-}
+    .overlay {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.68);
+      color: white;
+      opacity: 0;
+      transition: 0.2s;
+    }
 
-/* responsive */
-@media (max-width: 768px) {
-  .gallery { column-count: 2; }
-}
+    .gallery-item:hover .overlay {
+      opacity: 1;
+    }
 
-@media (max-width: 480px) {
-  .gallery { column-count: 1; }
-}
-
-    /* 🔍 MODAL */
     .modal {
       display: none;
       position: fixed;
       z-index: 9999;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.9);
+      inset: 0;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.94);
+      padding: 56px 70px;
+    }
+
+    .modal.open {
+      display: flex;
     }
 
     .modal img {
-      display: block;
-      margin: auto;
-      max-width: 90%;
-      max-height: 90%;
-      margin-top: 5%;
+      max-width: 100%;
+      max-height: 86vh;
       border-radius: 10px;
     }
 
+    .modal-button {
+      position: fixed;
+      z-index: 10000;
+      width: 44px;
+      height: 44px;
+      border: 0;
+      border-radius: 6px;
+      background: gold;
+      color: black;
+      cursor: pointer;
+      font-size: 26px;
+      font-weight: bold;
+    }
+
+    .modal-close { top: 18px; right: 18px; }
+    .modal-prev { left: 18px; top: 50%; transform: translateY(-50%); }
+    .modal-next { right: 18px; top: 50%; transform: translateY(-50%); }
+
+    @media (max-width: 768px) {
+      .gallery { column-count: 2; }
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: 68px;
+        left: 16px;
+        right: 16px;
+        padding: 12px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.96);
+        border: 1px solid rgba(255, 215, 0, 0.18);
+      }
+      .nav-links.open {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+      .menu-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .gallery { column-count: 1; }
+      .brand span {
+        max-width: 210px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .modal { padding: 52px 16px; }
+      .modal-prev { left: 10px; }
+      .modal-next { right: 10px; }
+    }
   </style>
 </head>
 
@@ -221,7 +267,6 @@
 <div id="page-loader" aria-label="Loading page">
   <div class="loader-card">
     <img src="{% static 'main/logo.jpeg' %}" alt="Jai Maa Bhadrakali Studio logo" class="loader-logo">
-    <div class="loader-spinner"></div>
     <p class="loader-text">Loading Studio</p>
   </div>
 </div>
@@ -234,63 +279,84 @@
   <div class="nav-links">
     <a href="/">Home</a>
     <a href="/services/">Services</a>
+    <a href="/#booking">Book</a>
   </div>
+  <button class="menu-toggle" type="button" onclick="toggleMenu()" aria-label="Open menu">☰</button>
 </nav>
 
 <h1>{{ category }}</h1>
 
 <div class="gallery">
-
   {% for img in images %}
-
     {% if img.image %}
       <div class="gallery-item">
-        <img src="{{ img.image.url }}" alt="image">
+        <img src="{{ img.image.url }}" alt="{{ img.title|default:img.get_category_display }}" data-gallery-image onclick="openModalBySrc(this.src)">
+        {% if img.title %}<div class="overlay">{{ img.title }}</div>{% endif %}
       </div>
     {% endif %}
 
     {% if img.video %}
       <div class="gallery-item">
-        <video controls>
+        <video controls preload="metadata">
           <source src="{{ img.video.url }}" type="video/mp4">
         </video>
+        {% if img.title %}<div class="overlay">{{ img.title }}</div>{% endif %}
       </div>
     {% endif %}
-
+  {% empty %}
+    <p>No media uploaded yet.</p>
   {% endfor %}
-
 </div>
 
-<!-- 🔍 IMAGE MODAL -->
-<div id="imageModal" class="modal" onclick="closeModal()">
-  <img id="modalImg">
+<div id="imageModal" class="modal" onclick="closeModal(event)">
+  <button class="modal-button modal-close" type="button" onclick="closeModal(event)">×</button>
+  <button class="modal-button modal-prev" type="button" onclick="showPrevious(event)">‹</button>
+  <img id="modalImg" alt="Gallery preview">
+  <button class="modal-button modal-next" type="button" onclick="showNext(event)">›</button>
 </div>
 
 <script>
-// 🔍 IMAGE MODAL
-function openModal(src) {
-  document.getElementById("imageModal").style.display = "block";
-  document.getElementById("modalImg").src = src;
+const galleryImages = Array.from(document.querySelectorAll("[data-gallery-image]")).map((img) => img.src);
+let activeIndex = 0;
+
+function toggleMenu() {
+  document.querySelector(".nav-links")?.classList.toggle("open");
 }
 
-function closeModal() {
-  document.getElementById("imageModal").style.display = "none";
+function openModal(index) {
+  if (!galleryImages.length) return;
+  activeIndex = index;
+  document.getElementById("modalImg").src = galleryImages[activeIndex];
+  document.getElementById("imageModal").classList.add("open");
 }
 
-// 🎬 VIDEO AUTO PLAY + HOVER SOUND
-document.querySelectorAll(".video-item").forEach(video => {
-  video.play().catch(() => {
-    // Browsers can block autoplay until the user interacts.
-  });
+function openModalBySrc(src) {
+  const index = galleryImages.indexOf(src);
+  openModal(index >= 0 ? index : 0);
+}
 
-  video.addEventListener("mouseenter", () => {
-    video.muted = false;
-    video.play().catch(() => {});
-  });
+function closeModal(event) {
+  if (event) event.stopPropagation();
+  document.getElementById("imageModal").classList.remove("open");
+}
 
-  video.addEventListener("mouseleave", () => {
-    video.muted = true;
-  });
+function showPrevious(event) {
+  event.stopPropagation();
+  activeIndex = (activeIndex - 1 + galleryImages.length) % galleryImages.length;
+  document.getElementById("modalImg").src = galleryImages[activeIndex];
+}
+
+function showNext(event) {
+  event.stopPropagation();
+  activeIndex = (activeIndex + 1) % galleryImages.length;
+  document.getElementById("modalImg").src = galleryImages[activeIndex];
+}
+
+document.addEventListener("keydown", (event) => {
+  if (!document.getElementById("imageModal").classList.contains("open")) return;
+  if (event.key === "Escape") closeModal(event);
+  if (event.key === "ArrowLeft") showPrevious(event);
+  if (event.key === "ArrowRight") showNext(event);
 });
 
 window.addEventListener("load", () => {
