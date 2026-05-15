@@ -1775,10 +1775,12 @@ const videos = [
   "{% static 'main/video2.mp4' %}",
   "{% static 'main/video3.mp4' %}",
   "{% static 'main/video4.mp4' %}",
-  "{% static 'main/video5.mp4' %}"
+  "{% static 'main/video5.mp4' %}",
+  "{% static 'main/video6.mp4' %}"
 ];
 
 let videoIndex = 0;
+let sliderVideoReady = false;
 
 function playSliderVideo(slider) {
   const playPromise = slider.play();
@@ -1800,10 +1802,18 @@ function changeVideo() {
   videoIndex = (videoIndex + 1) % videos.length;
 }
 
-setTimeout(() => {
+function setupVideoSlider() {
+  if (sliderVideoReady) return;
+
+  const slider = document.getElementById("sliderVideo");
+  if (!slider) return;
+
+  sliderVideoReady = true;
+  slider.addEventListener("ended", changeVideo);
   changeVideo();
-  setInterval(changeVideo, 5000);
-}, 500);
+}
+
+setTimeout(setupVideoSlider, 500);
 
 
 // =======================
