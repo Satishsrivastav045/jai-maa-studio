@@ -1,20 +1,26 @@
 import json
 import csv
 import re
+from io import StringIO
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from difflib import get_close_matches
 from urllib.parse import quote
 
+from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
+from django.core.cache import cache
+from django.core.management import call_command
+from django.core.mail import send_mail
 from django.db.models import Count, Q, Sum
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.timezone import now
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
 
-from .models import Booking, ChatData, Gallery, Testimonial, UnknownQuestion
+from .models import Booking, ChatData, Gallery, LeadClick, Package, Testimonial, UnknownQuestion
+from .security import verify_admin_code
 
 
 def parse_event_date(value):
@@ -29,6 +35,25 @@ def parse_event_date(value):
             continue
 
     return None
+
+
+def parse_decimal(value):
+    try:
+        amount = Decimal((value or "0").strip() or "0")
+    except (AttributeError, InvalidOperation):
+        return None
+    return amount if amount >= 0 else None
+
+
+def is_rate_limited(request, key, limit=20, window=60):
+    ident = request.META.get("HTTP_X_FORWARDED_FOR", request.META.get("REMOTE_ADDR", "unknown"))
+    ident = ident.split(",")[0].strip()
+    cache_key = f"rate:{key}:{ident}"
+    count = cache.get(cache_key, 0)
+    if count >= limit:
+        return True
+    cache.set(cache_key, count + 1, window)
+    return False
 
 
 # 🌍 Translator
@@ -177,10 +202,14 @@ def home(request):
         .order_by('-id')[:8]
     )
     testimonials = Testimonial.objects.filter(approved=True)
+    packages = Package.objects.filter(active=True)
 
     return render(request, "main/home.html", {
         "images": images,
-        "testimonials": testimonials
+        "testimonials": testimonials,
+        "packages": packages,
+        "google_analytics_id": settings.GOOGLE_ANALYTICS_ID,
+        "google_site_verification": settings.GOOGLE_SITE_VERIFICATION,
     })
 
 
@@ -210,10 +239,14 @@ def get_category_images(request, category):
 # =========================
 @require_POST
 def save_booking(request):
+    if is_rate_limited(request, "booking", limit=8, window=300):
+        return JsonResponse({"status": "error", "message": "Too many requests. Please try again later."}, status=429)
+
     name = request.POST.get("name", "").strip()
     phone = request.POST.get("phone", "").strip()
     event = request.POST.get("event", "").strip()
     event_date = request.POST.get("event_date", "").strip()
+    lead_source = request.POST.get("lead_source", "Website").strip()
 
     if not name or not phone or not event or not event_date:
         return JsonResponse({"status": "error", "message": "Missing required fields"}, status=400)
@@ -227,7 +260,23 @@ def save_booking(request):
         event=event[:100],
         event_date=event_date[:100],
         event_date_value=parse_event_date(event_date),
+        lead_source=lead_source[:100] or "Website",
     )
+
+    if settings.BOOKING_NOTIFICATION_EMAIL:
+        send_mail(
+            subject=f"New booking inquiry: {booking.event}",
+            message=(
+                f"Name: {booking.name}\n"
+                f"Phone: {booking.phone}\n"
+                f"Event: {booking.event}\n"
+                f"Date: {booking.event_date}\n"
+                f"Lead source: {booking.lead_source}"
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[settings.BOOKING_NOTIFICATION_EMAIL],
+            fail_silently=True,
+        )
 
     message = (
         "Hello, I want to book a shoot.\n"
@@ -281,6 +330,7 @@ def dashboard(request):
     event_filter = request.GET.get("event", "").strip()
     date_from = parse_event_date(request.GET.get("date_from", ""))
     date_to = parse_event_date(request.GET.get("date_to", ""))
+    follow_today = now().date()
 
     if search:
         bookings = bookings.filter(
@@ -307,11 +357,23 @@ def dashboard(request):
     total = Booking.objects.count()
     today = Booking.objects.filter(created_at__date=now().date()).count()
     confirmed = Booking.objects.filter(status=Booking.STATUS_CONFIRMED).count()
-    pending_amount = Booking.objects.exclude(status=Booking.STATUS_CANCELLED).aggregate(
-        total=Sum("advance_amount")
-    )["total"] or 0
+    active_bookings = Booking.objects.exclude(status__in=[Booking.STATUS_CANCELLED, Booking.STATUS_LOST])
+    advance_total = active_bookings.aggregate(total=Sum("advance_amount"))["total"] or 0
+    total_amount = active_bookings.aggregate(total=Sum("total_amount"))["total"] or 0
+    balance_total = total_amount - advance_total if total_amount > advance_total else 0
+    follow_up_count = Booking.objects.filter(follow_up_date__lte=follow_today).exclude(
+        status__in=[Booking.STATUS_COMPLETED, Booking.STATUS_CANCELLED, Booking.STATUS_LOST]
+    ).count()
+    click_stats = list(LeadClick.objects.values("click_type").annotate(count=Count("id")).order_by("click_type"))
 
     event_data = bookings.values('event').annotate(count=Count('event'))
+    upcoming_dates = list(
+        Booking.objects.filter(
+            event_date_value__gte=follow_today,
+            status__in=[Booking.STATUS_NEW, Booking.STATUS_CONTACTED, Booking.STATUS_CONFIRMED],
+        )
+        .order_by("event_date_value")[:12]
+    )
 
     labels = [e['event'] for e in event_data]
     counts = [e['count'] for e in event_data]
@@ -321,7 +383,12 @@ def dashboard(request):
         "total": total,
         "today": today,
         "confirmed": confirmed,
-        "advance_total": pending_amount,
+        "advance_total": advance_total,
+        "total_amount": total_amount,
+        "balance_total": balance_total,
+        "follow_up_count": follow_up_count,
+        "click_stats": click_stats,
+        "upcoming_dates": upcoming_dates,
         "labels": json.dumps(labels),
         "counts": json.dumps(counts),
         "status_choices": Booking.STATUS_CHOICES,
@@ -362,19 +429,24 @@ def update_booking_details(request, booking_id):
     notes = request.POST.get("notes", "").strip()
     payment_status = request.POST.get("payment_status", "").strip()
     advance_amount = request.POST.get("advance_amount", "0").strip() or "0"
+    total_amount = request.POST.get("total_amount", "0").strip() or "0"
+    lead_source = request.POST.get("lead_source", "").strip()
+    follow_up_date = parse_event_date(request.POST.get("follow_up_date", ""))
 
-    try:
-        parsed_amount = Decimal(advance_amount)
-    except InvalidOperation:
+    parsed_amount = parse_decimal(advance_amount)
+    parsed_total = parse_decimal(total_amount)
+    if parsed_amount is None:
         return JsonResponse({"status": "error", "message": "Invalid advance amount"}, status=400)
-
-    if parsed_amount < 0:
-        return JsonResponse({"status": "error", "message": "Advance amount cannot be negative"}, status=400)
+    if parsed_total is None:
+        return JsonResponse({"status": "error", "message": "Invalid total amount"}, status=400)
 
     booking.notes = notes[:1000]
     booking.payment_status = payment_status[:50]
     booking.advance_amount = parsed_amount
-    booking.save(update_fields=["notes", "payment_status", "advance_amount"])
+    booking.total_amount = parsed_total
+    booking.lead_source = lead_source[:100]
+    booking.follow_up_date = follow_up_date
+    booking.save(update_fields=["notes", "payment_status", "advance_amount", "total_amount", "lead_source", "follow_up_date"])
 
     return JsonResponse({"status": "success", "message": "Booking details saved"})
 
@@ -394,7 +466,11 @@ def export_bookings_csv(request):
         "Event Date",
         "Status",
         "Advance Amount",
+        "Total Amount",
+        "Balance Amount",
         "Payment Status",
+        "Lead Source",
+        "Follow Up Date",
         "Notes",
         "Created",
     ])
@@ -408,11 +484,32 @@ def export_bookings_csv(request):
             booking.event_date_value or booking.event_date,
             booking.get_status_display(),
             booking.advance_amount,
+            booking.total_amount,
+            booking.balance_amount,
             booking.payment_status,
+            booking.lead_source,
+            booking.follow_up_date,
             booking.notes,
             booking.created_at,
         ])
 
+    return response
+
+
+@staff_member_required
+@require_GET
+def export_backup_json(request):
+    output = StringIO()
+    call_command(
+        "dumpdata",
+        "main",
+        "--natural-foreign",
+        "--natural-primary",
+        indent=2,
+        stdout=output,
+    )
+    response = HttpResponse(output.getvalue(), content_type="application/json")
+    response["Content-Disposition"] = 'attachment; filename="jmbk-backup.json"'
     return response
 
 
@@ -421,6 +518,9 @@ def export_bookings_csv(request):
 # =========================
 @require_POST
 def chatbot_api(request):
+    if is_rate_limited(request, "chatbot", limit=30, window=300):
+        return JsonResponse({"reply": "Thodi der baad try karein."}, status=429)
+
     try:
         data = json.loads(request.body or "{}")
         user_msg = data.get("message", "").strip().lower()
@@ -480,6 +580,9 @@ def chatbot_api(request):
 
 @require_POST
 def submit_feedback(request):
+    if is_rate_limited(request, "feedback", limit=8, window=300):
+        return JsonResponse({"status": "error", "message": "Too many requests"}, status=429)
+
     try:
         data = json.loads(request.body or "{}")
     except json.JSONDecodeError:
@@ -512,4 +615,67 @@ def gallery_view(request, category):
     return render(request, "main/gallery.html", {
         "images": images,
         "category": category
+    })
+
+
+@require_POST
+def track_click(request):
+    click_type = request.POST.get("type", "").strip()
+    valid_types = {choice[0] for choice in LeadClick.TYPE_CHOICES}
+    if click_type not in valid_types:
+        return JsonResponse({"status": "error", "message": "Invalid click type"}, status=400)
+
+    LeadClick.objects.create(
+        click_type=click_type,
+        page=request.POST.get("page", "")[:120],
+    )
+    return JsonResponse({"status": "success"})
+
+
+def seo_page(request, slug):
+    pages = {
+        "wedding-photographer-pratapgarh": {
+            "title": "Wedding Photographer in Pratapgarh",
+            "heading": "Wedding Photographer in Pratapgarh",
+            "summary": "Jai Maa Bhadrakali Studio covers wedding photography, candid moments, cinematic video and albums for Pratapgarh families.",
+        },
+        "pre-wedding-shoot": {
+            "title": "Pre-Wedding Shoot",
+            "heading": "Pre-Wedding Shoot Packages",
+            "summary": "Outdoor, traditional and cinematic pre-wedding shoots with guided poses, reels and photo selection support.",
+        },
+        "katha-live-streaming": {
+            "title": "Katha Live Streaming",
+            "heading": "Katha Live Streaming",
+            "summary": "Live katha streaming, recording and event coverage available for local and outstation programs.",
+        },
+    }
+    page = pages.get(slug)
+    if not page:
+        return render(request, "main/seo.html", {
+            "page": pages["wedding-photographer-pratapgarh"],
+            "google_analytics_id": settings.GOOGLE_ANALYTICS_ID,
+            "google_site_verification": settings.GOOGLE_SITE_VERIFICATION,
+        }, status=404)
+
+    return render(request, "main/seo.html", {
+        "page": page,
+        "google_analytics_id": settings.GOOGLE_ANALYTICS_ID,
+        "google_site_verification": settings.GOOGLE_SITE_VERIFICATION,
+    })
+
+
+def admin_security_code(request):
+    next_url = request.GET.get("next") or request.POST.get("next") or "/dashboard/"
+    error = ""
+
+    if request.method == "POST":
+        if verify_admin_code(request.POST.get("code", "")):
+            request.session["admin_second_factor_ok"] = True
+            return redirect(next_url)
+        error = "Invalid security code."
+
+    return render(request, "main/security_code.html", {
+        "next_url": next_url,
+        "error": error,
     })

@@ -170,6 +170,14 @@
     <h2>₹{{ advance_total }}</h2>
     <p>Advance Total</p>
   </div>
+  <div class="card">
+    <h2>₹{{ balance_total }}</h2>
+    <p>Balance Due</p>
+  </div>
+  <div class="card">
+    <h2>{{ follow_up_count }}</h2>
+    <p>Follow-ups Due</p>
+  </div>
 </div>
 
 <form class="filters" method="get">
@@ -185,12 +193,32 @@
   <input type="date" name="date_to" value="{{ filters.date_to }}">
   <button type="submit">Filter</button>
   <a class="button-link" href="/dashboard/export/">Export CSV</a>
+  <a class="button-link" href="/dashboard/backup/">Backup JSON</a>
 </form>
 
 <h2>Booking Analytics</h2>
 <canvas id="bookingChart" width="400" height="200"></canvas>
 
 <p id="saveStatus" aria-live="polite"></p>
+
+<div class="stats">
+  <div class="card">
+    <h2>Upcoming Dates</h2>
+    {% for item in upcoming_dates %}
+      <p>{{ item.event_date_value }} - {{ item.name }} ({{ item.get_status_display }})</p>
+    {% empty %}
+      <p>No upcoming booking dates.</p>
+    {% endfor %}
+  </div>
+  <div class="card">
+    <h2>Lead Clicks</h2>
+    {% for item in click_stats %}
+      <p>{{ item.click_type|title }}: {{ item.count }}</p>
+    {% empty %}
+      <p>No click data yet.</p>
+    {% endfor %}
+  </div>
+</div>
 
 <div class="table-wrap">
   <table>
@@ -201,8 +229,12 @@
       <th>Event</th>
       <th>Event Date</th>
       <th>Status</th>
+      <th>Total</th>
       <th>Advance</th>
+      <th>Balance</th>
       <th>Payment</th>
+      <th>Source</th>
+      <th>Follow Up</th>
       <th>Notes</th>
       <th>Created</th>
       <th>Action</th>
@@ -223,10 +255,20 @@
         </select>
       </td>
       <td>
-        <input type="number" min="0" step="0.01" value="{{ b.advance_amount }}" data-field="advance_amount" data-booking-id="{{ b.id }}">
+        <input type="number" min="0" step="0.01" value="{{ b.total_amount }}" data-field="total_amount" data-booking-id="{{ b.id }}">
       </td>
       <td>
+        <input type="number" min="0" step="0.01" value="{{ b.advance_amount }}" data-field="advance_amount" data-booking-id="{{ b.id }}">
+      </td>
+      <td>₹{{ b.balance_amount }}</td>
+      <td>
         <input type="text" value="{{ b.payment_status }}" data-field="payment_status" data-booking-id="{{ b.id }}" placeholder="Pending / Paid">
+      </td>
+      <td>
+        <input type="text" value="{{ b.lead_source }}" data-field="lead_source" data-booking-id="{{ b.id }}" placeholder="Instagram / Google">
+      </td>
+      <td>
+        <input type="date" value="{{ b.follow_up_date|date:'Y-m-d' }}" data-field="follow_up_date" data-booking-id="{{ b.id }}">
       </td>
       <td>
         <textarea data-field="notes" data-booking-id="{{ b.id }}" placeholder="Follow-up notes">{{ b.notes }}</textarea>
@@ -238,7 +280,7 @@
     </tr>
     {% empty %}
     <tr>
-      <td colspan="11">No bookings found.</td>
+      <td colspan="15">No bookings found.</td>
     </tr>
     {% endfor %}
   </table>
@@ -303,8 +345,11 @@ async function saveDetails(bookingId) {
         "X-CSRFToken": getCookie("csrftoken")
       },
       body: new URLSearchParams({
+        total_amount: getField("total_amount").value,
         advance_amount: getField("advance_amount").value,
         payment_status: getField("payment_status").value,
+        lead_source: getField("lead_source").value,
+        follow_up_date: getField("follow_up_date").value,
         notes: getField("notes").value
       })
     });

@@ -13,6 +13,10 @@ urlpatterns = [
     path('dashboard/bookings/<int:booking_id>/status/', views.update_booking_status),
     path('dashboard/bookings/<int:booking_id>/details/', views.update_booking_details),
     path('dashboard/export/', views.export_bookings_csv),
+    path('dashboard/backup/', views.export_backup_json),
+    path('track-click/', views.track_click),
+    path('seo/<slug:slug>/', views.seo_page, name='seo_page'),
+    path('security-code/', views.admin_security_code, name='admin_security_code'),
 
     # 🤖 chatbot
     path('chatbot/', views.chatbot_api),

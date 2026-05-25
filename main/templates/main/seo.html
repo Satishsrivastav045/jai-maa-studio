@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{ page.title }} | Jai Maa Bhadrakali Studio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="{{ page.summary }}">
+  {% if google_site_verification %}
+  <meta name="google-site-verification" content="{{ google_site_verification }}">
+  {% endif %}
+  {% if google_analytics_id %}
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ google_analytics_id }}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '{{ google_analytics_id }}');
+  </script>
+  {% endif %}
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0a0a0a;
+      color: #fff;
+      line-height: 1.6;
+    }
+
+    main {
+      width: min(980px, calc(100% - 32px));
+      margin: auto;
+      padding: 48px 0;
+    }
+
+    a {
+      color: gold;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 0 18px;
+      border-radius: 6px;
+      background: gold;
+      color: #080808;
+      font-weight: bold;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <a href="/">Back to Home</a>
+    <h1>{{ page.heading }}</h1>
+    <p>{{ page.summary }}</p>
+    <p>Photography, video, album design and event coverage are planned according to event date, location, team size and delivery needs. Share your event details for an exact quote.</p>
+    <div class="actions">
+      <a class="button" href="/#booking">Check Availability</a>
+      <a class="button" href="https://wa.me/919936759702" target="_blank" rel="noopener">WhatsApp</a>
+    </div>
+  </main>
+</body>
+</html>

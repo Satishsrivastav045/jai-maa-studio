@@ -7,7 +7,7 @@ from .models import Testimonial
 
 
 
-from .models import Gallery, Booking, ChatData, UnknownQuestion
+from .models import Booking, ChatData, Gallery, LeadClick, Package, UnknownQuestion
 
 
 # =========================
@@ -30,14 +30,22 @@ class GalleryAdmin(admin.ModelAdmin):
     preview.short_description = "Preview"
 
 
+@admin.register(Package)
+class PackageAdmin(admin.ModelAdmin):
+    list_display = ['name', 'price_label', 'highlighted', 'active', 'sort_order']
+    list_filter = ['active', 'highlighted']
+    list_editable = ['highlighted', 'active', 'sort_order']
+    search_fields = ['name', 'description', 'features']
+
+
 # =========================
 # 🔥 BOOKING ADMIN
 # =========================
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ['id', 'name', 'phone', 'event', 'event_date_value', 'status', 'advance_amount', 'payment_status', 'created_at', 'whatsapp']
-    search_fields = ['name', 'phone', 'event']
-    list_filter = ['event', 'status', 'payment_status', 'event_date_value', 'created_at']
+    list_display = ['id', 'name', 'phone', 'event', 'event_date_value', 'status', 'lead_source', 'total_amount', 'advance_amount', 'balance_amount', 'payment_status', 'follow_up_date', 'created_at', 'whatsapp']
+    search_fields = ['name', 'phone', 'event', 'lead_source']
+    list_filter = ['event', 'status', 'payment_status', 'lead_source', 'event_date_value', 'follow_up_date', 'created_at']
     list_editable = ['status']
     ordering = ['-created_at']
     readonly_fields = ['created_at']
@@ -89,7 +97,32 @@ class ChatDataAdmin(admin.ModelAdmin):
 # =========================
 @admin.register(UnknownQuestion)
 class UnknownQuestionAdmin(admin.ModelAdmin):
-    list_display = ['question', 'suggested_answer', 'created_at']
+    actions = ['create_training_answers']
+    list_display = ['question', 'suggested_answer', 'trained', 'created_at']
+    list_filter = ['trained']
     search_fields = ['question']
     ordering = ['-created_at']
+
+    def create_training_answers(self, request, queryset):
+        created = 0
+        for item in queryset.filter(trained=False).exclude(suggested_answer__isnull=True).exclude(suggested_answer=""):
+            ChatData.objects.create(
+                question=item.question,
+                keywords=item.question,
+                answer=item.suggested_answer,
+                priority=50,
+            )
+            item.trained = True
+            item.save(update_fields=["trained"])
+            created += 1
+        self.message_user(request, f"{created} chatbot training answer(s) created.")
+
+    create_training_answers.short_description = "Create ChatData from suggested answers"
+
+
+@admin.register(LeadClick)
+class LeadClickAdmin(admin.ModelAdmin):
+    list_display = ['click_type', 'page', 'created_at']
+    list_filter = ['click_type', 'created_at']
+    readonly_fields = ['click_type', 'page', 'created_at']
 admin.site.register(Testimonial)

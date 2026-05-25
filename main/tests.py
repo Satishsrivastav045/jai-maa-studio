@@ -1,10 +1,11 @@
 import json
 
+from django.core import mail
 from django.contrib.auth.models import User
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
-from .models import Booking, ChatData, Testimonial, UnknownQuestion
+from .models import Booking, ChatData, LeadClick, Package, Testimonial, UnknownQuestion
 
 
 @override_settings(SECURE_SSL_REDIRECT=False)
@@ -31,6 +32,7 @@ class PublicApiTests(TestCase):
                 "phone": "9936759702",
                 "event": "Wedding",
                 "event_date": "2026-12-01",
+                "lead_source": "Instagram",
             },
         )
 
@@ -39,7 +41,64 @@ class PublicApiTests(TestCase):
         booking = Booking.objects.get()
         self.assertEqual(booking.status, Booking.STATUS_NEW)
         self.assertEqual(str(booking.event_date_value), "2026-12-01")
+        self.assertEqual(booking.lead_source, "Instagram")
         self.assertIn("whatsapp_url", response.json())
+
+    @override_settings(
+        EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+        BOOKING_NOTIFICATION_EMAIL="owner@example.com",
+        DEFAULT_FROM_EMAIL="site@example.com",
+    )
+    def test_booking_sends_owner_email_when_configured(self):
+        response = self.client.post(
+            "/save-booking/",
+            {
+                "name": "Amit",
+                "phone": "9936759702",
+                "event": "Wedding",
+                "event_date": "2026-12-01",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("New booking inquiry", mail.outbox[0].subject)
+
+    @override_settings(
+        STORAGES={
+            "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+            "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+        }
+    )
+    def test_home_renders_admin_packages(self):
+        Package.objects.create(
+            name="Gold Wedding",
+            price_label="Custom",
+            description="Photo and video coverage",
+            features="Photography\nCinematic video",
+            active=True,
+            sort_order=1,
+        )
+
+        response = self.client.get("/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Gold Wedding")
+
+    def test_track_click_records_lead_click(self):
+        response = self.client.post(
+            "/track-click/",
+            {"type": LeadClick.TYPE_WHATSAPP, "page": "/"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(LeadClick.objects.count(), 1)
+
+    def test_seo_page_renders(self):
+        response = self.client.get("/seo/wedding-photographer-pratapgarh/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Wedding Photographer in Pratapgarh")
 
     def test_availability_reports_existing_active_booking(self):
         Booking.objects.create(
@@ -165,7 +224,10 @@ class PublicApiTests(TestCase):
             f"/dashboard/bookings/{booking.id}/details/",
             {
                 "advance_amount": "5000",
+                "total_amount": "15000",
                 "payment_status": "Advance Paid",
+                "lead_source": "Google",
+                "follow_up_date": "2026-11-20",
                 "notes": "Call again next week",
             },
         )
@@ -173,7 +235,11 @@ class PublicApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         booking.refresh_from_db()
         self.assertEqual(booking.advance_amount, 5000)
+        self.assertEqual(booking.total_amount, 15000)
+        self.assertEqual(booking.balance_amount, 10000)
         self.assertEqual(booking.payment_status, "Advance Paid")
+        self.assertEqual(booking.lead_source, "Google")
+        self.assertEqual(str(booking.follow_up_date), "2026-11-20")
         self.assertEqual(booking.notes, "Call again next week")
 
     def test_logged_in_admin_can_export_bookings_csv(self):
@@ -192,6 +258,23 @@ class PublicApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "text/csv")
         self.assertIn(b"Amit", response.content)
+
+    def test_logged_in_admin_can_export_backup_json(self):
+        User.objects.create_user(username="admin", password="pass12345", is_staff=True)
+        self.client.login(username="admin", password="pass12345")
+        Booking.objects.create(
+            name="Amit",
+            phone="9936759702",
+            event="Wedding",
+            event_date="2026-12-01",
+            event_date_value="2026-12-01",
+        )
+
+        response = self.client.get("/dashboard/backup/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/json")
+        self.assertIn(b"main.booking", response.content)
 
     def test_non_staff_user_cannot_access_dashboard(self):
         User.objects.create_user(username="viewer", password="pass12345", is_staff=False)
@@ -221,3 +304,27 @@ class SecurityTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 403)
+
+    @override_settings(ADMIN_SECURITY_CODE="123456", ADMIN_TOTP_SECRET="")
+    def test_admin_security_code_gate_protects_dashboard(self):
+        User.objects.create_user(username="admin", password="pass12345", is_staff=True)
+        self.client.login(username="admin", password="pass12345")
+
+        response = self.client.get("/dashboard/")
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/security-code/", response["Location"])
+
+    @override_settings(ADMIN_SECURITY_CODE="123456", ADMIN_TOTP_SECRET="")
+    def test_admin_security_code_allows_dashboard_after_verification(self):
+        User.objects.create_user(username="admin", password="pass12345", is_staff=True)
+        self.client.login(username="admin", password="pass12345")
+
+        response = self.client.post(
+            "/security-code/",
+            {"code": "123456", "next": "/dashboard/"},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], "/dashboard/")
+        self.assertTrue(self.client.session["admin_second_factor_ok"])

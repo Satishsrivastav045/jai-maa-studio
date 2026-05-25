@@ -6,10 +6,22 @@
   <title>Bhadrakali Studio</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Jai Maa Bhadrakali Studio offers wedding photography, pre-wedding shoots, cinematic video, album design and live katha streaming in Uttar Pradesh and across India.">
+  {% if google_site_verification %}
+  <meta name="google-site-verification" content="{{ google_site_verification }}">
+  {% endif %}
   <meta property="og:title" content="Jai Maa Bhadrakali Studio">
   <meta property="og:description" content="Wedding photography, video, albums and live katha streaming with direct WhatsApp booking.">
   <meta property="og:type" content="website">
   <link rel="icon" type="image/jpeg" href="{% static 'main/logo.jpeg' %}">
+  {% if google_analytics_id %}
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ google_analytics_id }}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '{{ google_analytics_id }}');
+  </script>
+  {% endif %}
 
   <style>
     body {
@@ -1431,6 +1443,7 @@ textarea {
       <a href="#gallery">Gallery</a>
       <a href="#gallery" onclick="showGalleryVideos()">Videos</a>
       <a href="#packages">Packages</a>
+      <a href="/seo/wedding-photographer-pratapgarh/">Wedding</a>
       <a href="https://www.instagram.com/jmbkstudio?igsh=ejYzZ3k5cHZkbXE2" target="_blank" rel="noopener">Instagram</a>
       <a href="#contact">Contact</a>
     </div>
@@ -1651,6 +1664,19 @@ textarea {
   </div>
 
   <div class="package-grid">
+    {% for package in packages %}
+    <div class="package-card {% if package.highlighted %}highlight{% endif %}">
+      <h3>{{ package.name }}</h3>
+      <p>{{ package.description }}</p>
+      <h4>{{ package.price_label|default:"Custom Quote" }}</h4>
+      <ul>
+        {% for feature in package.feature_list %}
+          <li>{{ feature }}</li>
+        {% endfor %}
+      </ul>
+      <a href="#booking" class="btn {% if package.highlighted %}btn-primary{% else %}btn-outline{% endif %}" onclick="selectPackage('{{ package.event_name|default:package.name|escapejs }}')">{{ package.cta_label }}</a>
+    </div>
+    {% empty %}
 
     <div class="package-card">
       <h3>Basic</h3>
@@ -1687,6 +1713,7 @@ textarea {
       </ul>
       <a href="#booking" class="btn btn-outline" onclick="selectPackage('Premium Photo + Video + Album')">Choose Premium</a>
     </div>
+    {% endfor %}
 
   </div>
 
@@ -1763,6 +1790,13 @@ textarea {
     <input type="text" id="name" placeholder="Your Name" required>
     <input type="tel" id="phone" placeholder="Phone Number" required>
     <input type="text" id="event" placeholder="Event Type (Wedding / Katha)" required>
+    <select id="lead_source" aria-label="How did you find us?">
+      <option value="Website">Website</option>
+      <option value="Instagram">Instagram</option>
+      <option value="YouTube">YouTube</option>
+      <option value="Google">Google</option>
+      <option value="Referral">Referral</option>
+    </select>
    <input type="date" id="event_date" onblur="checkAvailability()" required>
 
     <button type="submit">Send on WhatsApp</button>
@@ -1791,11 +1825,11 @@ textarea {
       <div class="contact-actions">
         <a href="https://wa.me/919936759702?text=Hello%20I%20want%20to%20book%20a%20shoot"
           target="_blank"
-          class="contact-btn">
+          class="contact-btn" onclick="trackLeadClick('whatsapp')">
           Chat on WhatsApp
         </a>
-        <a href="https://www.youtube.com/@arvindsrivastava9574" target="_blank" class="contact-btn">YouTube</a>
-        <a href="https://www.instagram.com/jmbkstudio?igsh=ejYzZ3k5cHZkbXE2" target="_blank" rel="noopener" class="contact-btn">Instagram</a>
+        <a href="https://www.youtube.com/@arvindsrivastava9574" target="_blank" class="contact-btn" onclick="trackLeadClick('youtube')">YouTube</a>
+        <a href="https://www.instagram.com/jmbkstudio?igsh=ejYzZ3k5cHZkbXE2" target="_blank" rel="noopener" class="contact-btn" onclick="trackLeadClick('instagram')">Instagram</a>
       </div>
     </div>
   </div>
@@ -1851,12 +1885,14 @@ async function sendToWhatsApp(event) {
   let phone = document.getElementById("phone").value.trim();
   let eventType = document.getElementById("event").value.trim();
   let event_date = document.getElementById("event_date").value.trim();
+  let lead_source = document.getElementById("lead_source").value.trim();
 
   const formData = new URLSearchParams({
     name: name,
     phone: phone,
     event: eventType,
-    event_date: event_date
+    event_date: event_date,
+    lead_source: lead_source
   });
 
   status.textContent = "Saving your inquiry...";
@@ -2186,6 +2222,20 @@ async function submitFeedback() {
   // clear form
   document.getElementById("fb-name").value = "";
   document.getElementById("fb-message").value = "";
+}
+
+function trackLeadClick(type) {
+  fetch("/track-click/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "X-CSRFToken": getCookie("csrftoken")
+    },
+    body: new URLSearchParams({
+      type: type,
+      page: window.location.pathname
+    })
+  }).catch(() => {});
 }
 </script>
 </body>
