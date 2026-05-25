@@ -100,6 +100,22 @@ class PublicApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Wedding Photographer in Pratapgarh")
 
+    def test_sitemap_xml_lists_public_pages(self):
+        response = self.client.get("/sitemap.xml")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/xml")
+        self.assertContains(response, "/seo/wedding-photographer-pratapgarh/")
+        self.assertContains(response, "/gallery/prewedding/")
+
+    def test_robots_txt_points_to_sitemap(self):
+        response = self.client.get("/robots.txt")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/plain")
+        self.assertContains(response, "Disallow: /admin/")
+        self.assertContains(response, "Sitemap:")
+
     def test_availability_reports_existing_active_booking(self):
         Booking.objects.create(
             name="Amit",

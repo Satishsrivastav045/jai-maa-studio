@@ -16,6 +16,8 @@ urlpatterns = [
     path('dashboard/backup/', views.export_backup_json),
     path('track-click/', views.track_click),
     path('seo/<slug:slug>/', views.seo_page, name='seo_page'),
+    path('sitemap.xml', views.sitemap_xml, name='sitemap_xml'),
+    path('robots.txt', views.robots_txt, name='robots_txt'),
     path('security-code/', views.admin_security_code, name='admin_security_code'),
 
     # 🤖 chatbot

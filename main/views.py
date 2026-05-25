@@ -633,7 +633,24 @@ def track_click(request):
 
 
 def seo_page(request, slug):
-    pages = {
+    pages = get_seo_pages()
+    page = pages.get(slug)
+    if not page:
+        return render(request, "main/seo.html", {
+            "page": pages["wedding-photographer-pratapgarh"],
+            "google_analytics_id": settings.GOOGLE_ANALYTICS_ID,
+            "google_site_verification": settings.GOOGLE_SITE_VERIFICATION,
+        }, status=404)
+
+    return render(request, "main/seo.html", {
+        "page": page,
+        "google_analytics_id": settings.GOOGLE_ANALYTICS_ID,
+        "google_site_verification": settings.GOOGLE_SITE_VERIFICATION,
+    })
+
+
+def get_seo_pages():
+    return {
         "wedding-photographer-pratapgarh": {
             "title": "Wedding Photographer in Pratapgarh",
             "heading": "Wedding Photographer in Pratapgarh",
@@ -650,19 +667,42 @@ def seo_page(request, slug):
             "summary": "Live katha streaming, recording and event coverage available for local and outstation programs.",
         },
     }
-    page = pages.get(slug)
-    if not page:
-        return render(request, "main/seo.html", {
-            "page": pages["wedding-photographer-pratapgarh"],
-            "google_analytics_id": settings.GOOGLE_ANALYTICS_ID,
-            "google_site_verification": settings.GOOGLE_SITE_VERIFICATION,
-        }, status=404)
 
-    return render(request, "main/seo.html", {
-        "page": page,
-        "google_analytics_id": settings.GOOGLE_ANALYTICS_ID,
-        "google_site_verification": settings.GOOGLE_SITE_VERIFICATION,
-    })
+
+@require_GET
+def sitemap_xml(request):
+    base_url = request.build_absolute_uri("/").rstrip("/")
+    paths = [
+        "/",
+        "/services/",
+        *[f"/seo/{slug}/" for slug in get_seo_pages()],
+    ]
+    gallery_paths = [f"/gallery/{value}/" for value, _label in Gallery.CATEGORY_CHOICES]
+    paths.extend(gallery_paths)
+
+    lines = ['<?xml version="1.0" encoding="UTF-8"?>']
+    lines.append('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
+    for path in paths:
+        lines.append("  <url>")
+        lines.append(f"    <loc>{base_url}{path}</loc>")
+        lines.append("  </url>")
+    lines.append("</urlset>")
+
+    return HttpResponse("\n".join(lines), content_type="application/xml")
+
+
+@require_GET
+def robots_txt(request):
+    sitemap_url = request.build_absolute_uri("/sitemap.xml")
+    content = "\n".join([
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /admin/",
+        "Disallow: /dashboard/",
+        f"Sitemap: {sitemap_url}",
+        "",
+    ])
+    return HttpResponse(content, content_type="text/plain")
 
 
 def admin_security_code(request):
