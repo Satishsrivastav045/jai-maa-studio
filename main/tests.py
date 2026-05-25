@@ -156,6 +156,15 @@ class PublicApiTests(TestCase):
         self.assertEqual(response["Content-Type"], "text/csv")
         self.assertIn(b"Amit", response.content)
 
+    def test_non_staff_user_cannot_access_dashboard(self):
+        User.objects.create_user(username="viewer", password="pass12345", is_staff=False)
+        self.client.login(username="viewer", password="pass12345")
+
+        response = self.client.get("/dashboard/")
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("admin:login"), response["Location"])
+
 
 @override_settings(SECURE_SSL_REDIRECT=False)
 class SecurityTests(TestCase):

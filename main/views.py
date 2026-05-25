@@ -5,7 +5,7 @@ from decimal import Decimal, InvalidOperation
 from difflib import get_close_matches
 from urllib.parse import quote
 
-from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Count, Q, Sum
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render
@@ -232,7 +232,7 @@ def check_availability(request):
 # =========================
 # 📊 DASHBOARD
 # =========================
-@login_required
+@staff_member_required
 def dashboard(request):
     bookings = Booking.objects.all()
     search = request.GET.get("q", "").strip()
@@ -294,7 +294,7 @@ def dashboard(request):
     })
 
 
-@login_required
+@staff_member_required
 @require_POST
 def update_booking_status(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
@@ -314,7 +314,7 @@ def update_booking_status(request, booking_id):
     })
 
 
-@login_required
+@staff_member_required
 @require_POST
 def update_booking_details(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
@@ -338,7 +338,7 @@ def update_booking_details(request, booking_id):
     return JsonResponse({"status": "success", "message": "Booking details saved"})
 
 
-@login_required
+@staff_member_required
 @require_GET
 def export_bookings_csv(request):
     response = HttpResponse(content_type="text/csv")

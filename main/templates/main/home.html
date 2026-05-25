@@ -741,6 +741,25 @@ body::selection {
   filter: saturate(0.92) contrast(1.05);
 }
 
+.hero-photo,
+.hero video {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-photo {
+  inset: 0;
+  display: block;
+  filter: saturate(0.95) contrast(1.05);
+}
+
+.hero-media-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .overlay {
   inset: 0;
   background:
@@ -798,6 +817,65 @@ h1 {
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 28px;
+}
+
+.hero-mode {
+  display: inline-flex;
+  gap: 6px;
+  margin-top: 18px;
+  padding: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(8px);
+}
+
+.hero-mode button {
+  min-width: 86px;
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 5px;
+  color: var(--muted);
+  background: transparent;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.hero-mode button.active {
+  color: #080806;
+  background: var(--gold);
+}
+
+.gallery-mode {
+  display: flex;
+  gap: 6px;
+  width: max-content;
+  max-width: 1180px;
+  margin: 0 auto 24px;
+  padding: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.34);
+}
+
+.gallery-mode button {
+  min-width: 94px;
+  padding: 10px 15px;
+  border: 0;
+  border-radius: 5px;
+  color: var(--muted);
+  background: transparent;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.gallery-mode button.active {
+  color: #080806;
+  background: var(--gold);
+}
+
+.gallery-panel-hidden {
+  display: none !important;
 }
 
 .btn {
@@ -900,6 +978,7 @@ h1 {
 
 .grid,
 .gallery-grid,
+.video-grid,
 .package-grid,
 .testi-grid {
   max-width: 1180px;
@@ -988,6 +1067,42 @@ h1 {
   background: rgba(8, 8, 6, 0.84);
   color: var(--gold-soft);
   font-weight: 700;
+}
+
+.video-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: auto;
+}
+
+.video-card {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #15130f;
+}
+
+.video-card video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: #050505;
+}
+
+.video-card h3 {
+  margin: 0;
+  padding: 14px 16px 4px;
+  color: var(--text);
+  font-size: 17px;
+}
+
+.video-card p {
+  margin: 0;
+  padding: 0 16px 16px;
+  color: var(--muted);
+  font-size: 14px;
 }
 
 .package-card {
@@ -1213,6 +1328,7 @@ textarea {
   .hero-stats,
   .grid,
   .gallery-grid,
+  .video-grid,
   .package-grid,
   .testi-grid,
   .feedback-grid,
@@ -1313,7 +1429,9 @@ textarea {
       <a href="/">Home</a>
       <a href="/services/">Services</a>
       <a href="#gallery">Gallery</a>
+      <a href="#gallery" onclick="showGalleryVideos()">Videos</a>
       <a href="#packages">Packages</a>
+      <a href="https://www.instagram.com/jmbkstudio?igsh=ejYzZ3k5cHZkbXE2" target="_blank" rel="noopener">Instagram</a>
       <a href="#contact">Contact</a>
     </div>
     <button class="menu-toggle" type="button" onclick="toggleMenu()" aria-label="Open menu">☰</button>
@@ -1322,7 +1440,14 @@ textarea {
   <!-- HERO -->
   <section class="hero">
 
-    <video id="sliderVideo" autoplay muted loop playsinline></video>
+    {% for img in images %}
+      {% if forloop.first %}
+        <img id="heroPhoto" class="hero-photo" src="{{ img.image.url }}" alt="{{ img.title|default:'Jai Maa Bhadrakali Studio work' }}">
+      {% endif %}
+    {% empty %}
+      <img id="heroPhoto" class="hero-photo" src="{% static 'main/logo.jpeg' %}" alt="Jai Maa Bhadrakali Studio">
+    {% endfor %}
+    <video id="sliderVideo" class="hero-media-hidden" muted playsinline></video>
 
     <div class="overlay"></div>
 
@@ -1343,6 +1468,11 @@ textarea {
       <div class="buttons">
         <a href="#booking" class="btn btn-primary">Check Availability</a>
         <a href="#gallery" class="btn btn-outline">View Portfolio</a>
+      </div>
+
+      <div class="hero-mode" aria-label="Hero media selector">
+        <button id="heroPhotoBtn" class="active" type="button" onclick="showHeroPhoto()">Photo</button>
+        <button id="heroVideoBtn" type="button" onclick="showHeroVideo()">Video</button>
       </div>
 
       <div class="hero-stats" aria-label="Studio highlights">
@@ -1442,8 +1572,13 @@ textarea {
       </div>
       <p>Upload approved work from the admin panel and the newest images appear here automatically.</p>
     </div>
+
+    <div class="gallery-mode" aria-label="Gallery media selector">
+      <button id="galleryPhotoBtn" class="active" type="button" onclick="showGalleryPhotos()">Photos</button>
+      <button id="galleryVideoBtn" type="button" onclick="showGalleryVideos()">Videos</button>
+    </div>
   
-    <div class="gallery-grid">
+    <div id="galleryPhotos" class="gallery-grid">
     
       {% for img in images %}
       <div class="gallery-item" data-src="{{ img.image.url }}" onclick="openModal(this.dataset.src)">
@@ -1454,6 +1589,56 @@ textarea {
       <p>No images uploaded yet</p>
       {% endfor %}
     
+    </div>
+
+    <div id="galleryVideos" class="video-grid gallery-panel-hidden">
+      <div class="video-card">
+        <video controls preload="metadata" playsinline>
+          <source src="{% static 'main/video1.mp4' %}" type="video/mp4">
+        </video>
+        <h3>Wedding Highlight</h3>
+        <p>Cinematic moments and couple coverage.</p>
+      </div>
+
+      <div class="video-card">
+        <video controls preload="metadata" playsinline>
+          <source src="{% static 'main/video2.mp4' %}" type="video/mp4">
+        </video>
+        <h3>Event Coverage</h3>
+        <p>Traditional ceremony and family moments.</p>
+      </div>
+
+      <div class="video-card">
+        <video controls preload="metadata" playsinline>
+          <source src="{% static 'main/video3.mp4' %}" type="video/mp4">
+        </video>
+        <h3>Studio Film Style</h3>
+        <p>Sample edit for wedding and katha work.</p>
+      </div>
+
+      <div class="video-card">
+        <video controls preload="metadata" playsinline>
+          <source src="{% static 'main/video4.mp4' %}" type="video/mp4">
+        </video>
+        <h3>Pre-Wedding Clip</h3>
+        <p>Short reel-style couple shoot sample.</p>
+      </div>
+
+      <div class="video-card">
+        <video controls preload="metadata" playsinline>
+          <source src="{% static 'main/video5.mp4' %}" type="video/mp4">
+        </video>
+        <h3>Katha Recording</h3>
+        <p>Devotional program and live coverage style.</p>
+      </div>
+
+      <div class="video-card">
+        <video controls preload="metadata" playsinline>
+          <source src="{% static 'main/video6.mp4' %}" type="video/mp4">
+        </video>
+        <h3>Family Function</h3>
+        <p>Guest, stage and celebration coverage.</p>
+      </div>
     </div>
   
   </section>
@@ -1563,6 +1748,9 @@ textarea {
  " target="_blank" class="btn btn-primary">
       Visit YouTube Channel
     </a>
+    <a href="https://www.instagram.com/jmbkstudio?igsh=ejYzZ3k5cHZkbXE2" target="_blank" rel="noopener" class="btn btn-outline">
+      Visit Instagram
+    </a>
   </div>
 
 </section>
@@ -1614,6 +1802,7 @@ textarea {
           Chat on WhatsApp
         </a>
         <a href="https://www.youtube.com/@arvindsrivastava9574" target="_blank" class="contact-btn">YouTube</a>
+        <a href="https://www.instagram.com/jmbkstudio?igsh=ejYzZ3k5cHZkbXE2" target="_blank" rel="noopener" class="contact-btn">Instagram</a>
       </div>
     </div>
   </div>
@@ -1781,6 +1970,8 @@ const videos = [
 
 let videoIndex = 0;
 let sliderVideoReady = false;
+let sliderVideoTimer;
+let heroVideoStarted = false;
 
 function playSliderVideo(slider) {
   const playPromise = slider.play();
@@ -1793,8 +1984,9 @@ function playSliderVideo(slider) {
 
 function changeVideo() {
   const slider = document.getElementById("sliderVideo");
-  if (!slider) return;
+  if (!slider || !heroVideoStarted) return;
 
+  clearTimeout(sliderVideoTimer);
   slider.src = videos[videoIndex];
   slider.load();
   playSliderVideo(slider);
@@ -1810,16 +2002,80 @@ function setupVideoSlider() {
 
   sliderVideoReady = true;
   slider.addEventListener("ended", changeVideo);
-  changeVideo();
+  slider.addEventListener("loadedmetadata", () => {
+    if (!heroVideoStarted) return;
+    clearTimeout(sliderVideoTimer);
+    const duration = Number.isFinite(slider.duration) ? slider.duration : 8;
+    sliderVideoTimer = setTimeout(changeVideo, Math.max(duration * 1000, 8000));
+  });
 }
 
-setTimeout(setupVideoSlider, 500);
+function showHeroPhoto() {
+  const photo = document.getElementById("heroPhoto");
+  const slider = document.getElementById("sliderVideo");
+  const photoBtn = document.getElementById("heroPhotoBtn");
+  const videoBtn = document.getElementById("heroVideoBtn");
+
+  heroVideoStarted = false;
+  clearTimeout(sliderVideoTimer);
+  slider?.pause();
+  slider?.classList.add("hero-media-hidden");
+  photo?.classList.remove("hero-media-hidden");
+  photoBtn?.classList.add("active");
+  videoBtn?.classList.remove("active");
+}
+
+function showHeroVideo() {
+  const photo = document.getElementById("heroPhoto");
+  const slider = document.getElementById("sliderVideo");
+  const photoBtn = document.getElementById("heroPhotoBtn");
+  const videoBtn = document.getElementById("heroVideoBtn");
+
+  heroVideoStarted = true;
+  setupVideoSlider();
+  photo?.classList.add("hero-media-hidden");
+  slider?.classList.remove("hero-media-hidden");
+  photoBtn?.classList.remove("active");
+  videoBtn?.classList.add("active");
+
+  if (!slider.src) {
+    changeVideo();
+  } else {
+    playSliderVideo(slider);
+  }
+}
+
+function showGalleryPhotos() {
+  const photos = document.getElementById("galleryPhotos");
+  const videos = document.getElementById("galleryVideos");
+  const photoBtn = document.getElementById("galleryPhotoBtn");
+  const videoBtn = document.getElementById("galleryVideoBtn");
+
+  photos?.classList.remove("gallery-panel-hidden");
+  videos?.classList.add("gallery-panel-hidden");
+  photoBtn?.classList.add("active");
+  videoBtn?.classList.remove("active");
+  videos?.querySelectorAll("video").forEach((video) => video.pause());
+}
+
+function showGalleryVideos() {
+  const photos = document.getElementById("galleryPhotos");
+  const videos = document.getElementById("galleryVideos");
+  const photoBtn = document.getElementById("galleryPhotoBtn");
+  const videoBtn = document.getElementById("galleryVideoBtn");
+
+  photos?.classList.add("gallery-panel-hidden");
+  videos?.classList.remove("gallery-panel-hidden");
+  photoBtn?.classList.remove("active");
+  videoBtn?.classList.add("active");
+}
 
 
 // =======================
 // 🔥 SERVICE CLICK → BACKEND DATA LOAD (FIXED)
 // =======================
 function loadCategory(category) {
+  showGalleryPhotos();
   fetch(`/category/${category}/`)
     .then(res => res.json())
     .then(data => {
@@ -1827,7 +2083,10 @@ function loadCategory(category) {
       gallery.innerHTML = "";
 
       if (data.length === 0) {
-        gallery.innerHTML = "<p style='color:white'>No images found</p>";
+        const emptyMessage = document.createElement("p");
+        emptyMessage.style.color = "white";
+        emptyMessage.textContent = "No images found";
+        gallery.appendChild(emptyMessage);
         return;
       }
 
@@ -1866,6 +2125,17 @@ function toggleChat() {
 // 🤖 AI CHATBOT (REAL)
 // =======================
 
+function appendChatMessage(sender, message) {
+  const body = document.getElementById("chat-body");
+  const line = document.createElement("p");
+  const label = document.createElement("b");
+
+  label.textContent = `${sender}:`;
+  line.appendChild(label);
+  line.appendChild(document.createTextNode(` ${message}`));
+  body.appendChild(line);
+  body.scrollTop = body.scrollHeight;
+}
 
 
 async function handleChat(event) {
@@ -1876,7 +2146,7 @@ async function handleChat(event) {
     input.value = "";
 
     const body = document.getElementById("chat-body");
-    body.innerHTML += `<p><b>You:</b> ${msg}</p>`;
+    appendChatMessage("You", msg);
 
     try {
       const res = await fetch("/chatbot/", {
@@ -1889,12 +2159,10 @@ async function handleChat(event) {
       });
 
       const data = await res.json();
-      body.innerHTML += `<p><b>Bot:</b> ${data.reply || "🙏 Ask about booking, wedding, album design or price."}</p>`;
+      appendChatMessage("Bot", data.reply || "Ask about booking, wedding, album design or price.");
     } catch {
-      body.innerHTML += "<p><b>Bot:</b> Server error, try again.</p>";
+      appendChatMessage("Bot", "Server error, try again.");
     }
-
-    body.scrollTop = body.scrollHeight;
   }
 }
 async function submitFeedback() {
