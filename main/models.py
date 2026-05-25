@@ -68,10 +68,26 @@ class Booking(models.Model):
 # =========================
 class ChatData(models.Model):
     question = models.CharField(max_length=255)
+    keywords = models.TextField(
+        blank=True,
+        help_text="Comma or line separated words/phrases that should trigger this answer.",
+    )
     answer = models.TextField()
+    active = models.BooleanField(default=True)
+    priority = models.PositiveIntegerField(
+        default=100,
+        help_text="Lower number is checked first.",
+    )
+
+    class Meta:
+        ordering = ["priority", "id"]
 
     def __str__(self):
         return self.question
+
+    def keyword_list(self):
+        raw_keywords = self.keywords.replace("\n", ",").split(",")
+        return [keyword.strip() for keyword in raw_keywords if keyword.strip()]
 
 
 # =========================

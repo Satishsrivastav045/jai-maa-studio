@@ -1,5 +1,6 @@
 import json
 import csv
+import re
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from difflib import get_close_matches
@@ -42,6 +43,46 @@ def safe_detect_language(text):
 
 def safe_translate(text, dest):
     return text
+
+
+def normalize_chat_text(value):
+    value = (value or "").lower()
+    value = re.sub(r"[^\w\s\u0900-\u097f]", " ", value)
+    return re.sub(r"\s+", " ", value).strip()
+
+
+def get_trained_reply(user_msg):
+    user_text = normalize_chat_text(user_msg)
+    if not user_text:
+        return None
+
+    training_items = list(ChatData.objects.filter(active=True).order_by("priority", "id"))
+
+    for item in training_items:
+        question = normalize_chat_text(item.question)
+        if question and question == user_text:
+            return item.answer
+
+    for item in training_items:
+        question = normalize_chat_text(item.question)
+        if question and len(question) >= 4 and question in user_text:
+            return item.answer
+
+        for keyword in item.keyword_list():
+            keyword_text = normalize_chat_text(keyword)
+            if keyword_text and keyword_text in user_text:
+                return item.answer
+
+    question_map = {
+        normalize_chat_text(item.question): item
+        for item in training_items
+        if normalize_chat_text(item.question)
+    }
+    match = get_close_matches(user_text, list(question_map), n=1, cutoff=0.72)
+    if match:
+        return question_map[match[0]].answer
+
+    return None
 
 
 def get_studio_reply(user_msg):
@@ -387,18 +428,9 @@ def chatbot_api(request):
         if not user_msg:
             return JsonResponse({"reply": "Please type a message."}, status=400)
 
-        # =========================
-        # 🔥 1. DATABASE MATCH
-        # =========================
-        all_data = ChatData.objects.all()
-        questions = [item.question.lower() for item in all_data]
-
-        match = get_close_matches(user_msg, questions, n=1, cutoff=0.6)
-
-        if match:
-            for item in all_data:
-                if item.question.lower() == match[0]:
-                    return JsonResponse({"reply": item.answer})
+        trained_answer = get_trained_reply(user_msg)
+        if trained_answer:
+            return JsonResponse({"reply": trained_answer})
 
         # =========================
         # 🔥 2. STUDIO REPLY

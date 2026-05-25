@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
-from .models import Booking, Testimonial, UnknownQuestion
+from .models import Booking, ChatData, Testimonial, UnknownQuestion
 
 
 @override_settings(SECURE_SSL_REDIRECT=False)
@@ -92,6 +92,43 @@ class PublicApiTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(UnknownQuestion.objects.count(), 1)
+
+    def test_chatbot_uses_custom_training_keywords_first(self):
+        ChatData.objects.create(
+            question="custom price answer",
+            keywords="price, rate, charge",
+            answer="Hamare custom package ke liye WhatsApp par final quote milega.",
+            priority=1,
+        )
+
+        response = self.client.post(
+            "/chatbot/",
+            data=json.dumps({"message": "wedding price kya hai"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()["reply"],
+            "Hamare custom package ke liye WhatsApp par final quote milega.",
+        )
+
+    def test_chatbot_ignores_inactive_training(self):
+        ChatData.objects.create(
+            question="booking",
+            keywords="booking",
+            answer="Inactive answer",
+            active=False,
+        )
+
+        response = self.client.post(
+            "/chatbot/",
+            data=json.dumps({"message": "booking kaise hogi"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotEqual(response.json()["reply"], "Inactive answer")
 
     def test_logged_in_admin_can_update_booking_status(self):
         User.objects.create_user(username="admin", password="pass12345", is_staff=True)

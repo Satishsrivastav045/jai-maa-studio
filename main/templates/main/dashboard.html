@@ -233,7 +233,7 @@
       </td>
       <td>{{ b.created_at }}</td>
       <td>
-        <button class="inline-save" type="button" onclick="saveDetails({{ b.id }})">Save</button>
+        <button class="inline-save" type="button" data-booking-id="{{ b.id }}">Save</button>
       </td>
     </tr>
     {% empty %}
@@ -319,6 +319,10 @@ async function saveDetails(bookingId) {
 
 document.querySelectorAll(".status-select").forEach((select) => {
   select.dataset.previousValue = select.value;
+});
+
+document.querySelectorAll(".inline-save").forEach((button) => {
+  button.addEventListener("click", () => saveDetails(button.dataset.bookingId));
 });
 
 const labels = JSON.parse('{{ labels|escapejs }}');

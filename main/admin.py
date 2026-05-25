@@ -72,8 +72,16 @@ class BookingAdmin(admin.ModelAdmin):
 # =========================
 @admin.register(ChatData)
 class ChatDataAdmin(admin.ModelAdmin):
-    list_display = ['question', 'answer']
-    search_fields = ['question']
+    list_display = ['question', 'keyword_preview', 'priority', 'active']
+    list_filter = ['active']
+    list_editable = ['priority', 'active']
+    search_fields = ['question', 'keywords', 'answer']
+    ordering = ['priority', 'id']
+
+    def keyword_preview(self, obj):
+        return ", ".join(obj.keyword_list()[:5]) or "-"
+
+    keyword_preview.short_description = "Keywords"
 
 
 # =========================
