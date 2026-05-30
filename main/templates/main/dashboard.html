@@ -35,7 +35,7 @@
       margin-bottom: 24px;
     }
 
-    .card, .filters, .table-wrap {
+    .card, .filters, .table-wrap, .panel {
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -52,6 +52,31 @@
     }
 
     .card p { margin-bottom: 0; color: var(--muted); }
+
+    .section-title {
+      margin: 30px 0 14px;
+      text-align: left;
+    }
+
+    .panel {
+      padding: 14px;
+      margin-bottom: 24px;
+    }
+
+    .add-booking {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .add-booking textarea {
+      grid-column: span 2;
+      width: 100%;
+    }
+
+    .add-booking button {
+      align-self: stretch;
+    }
 
     .filters {
       display: grid;
@@ -139,13 +164,77 @@
       min-width: 120px;
     }
 
+    .quick-actions {
+      display: grid;
+      gap: 8px;
+      min-width: 150px;
+    }
+
+    .quick-actions button {
+      min-height: 34px;
+      padding: 8px;
+      background: #25d366;
+      color: #07130b;
+      font-size: 13px;
+    }
+
+    .calendar {
+      width: 100%;
+      min-width: 720px;
+      table-layout: fixed;
+    }
+
+    .calendar th {
+      text-align: center;
+    }
+
+    .calendar td {
+      height: 120px;
+      background: #0b0b0b;
+      vertical-align: top;
+    }
+
+    .calendar .empty-day {
+      background: #070707;
+    }
+
+    .day-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      color: var(--muted);
+      font-weight: bold;
+    }
+
+    .today .day-number {
+      background: var(--gold);
+      color: #000;
+    }
+
+    .calendar-item {
+      display: block;
+      margin-top: 8px;
+      padding: 7px;
+      border-radius: 6px;
+      background: rgba(255, 215, 0, 0.12);
+      border: 1px solid rgba(255, 215, 0, 0.24);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
     @media (max-width: 980px) {
       body { padding: 12px; }
       .filters { grid-template-columns: 1fr 1fr; }
+      .add-booking { grid-template-columns: 1fr 1fr; }
     }
 
     @media (max-width: 560px) {
       .filters { grid-template-columns: 1fr; }
+      .add-booking { grid-template-columns: 1fr; }
+      .add-booking textarea { grid-column: span 1; }
     }
   </style>
 </head>
@@ -179,6 +268,20 @@
     <p>Follow-ups Due</p>
   </div>
 </div>
+
+<h2 class="section-title">Add Booking</h2>
+<form id="addBookingForm" class="panel add-booking">
+  <input type="text" name="name" placeholder="Customer name" required>
+  <input type="tel" name="phone" placeholder="Phone number" required>
+  <input type="text" name="event" placeholder="Event type" required>
+  <input type="date" name="event_date" required>
+  <input type="number" min="0" step="0.01" name="total_amount" placeholder="Total amount">
+  <input type="number" min="0" step="0.01" name="advance_amount" placeholder="Advance amount">
+  <input type="text" name="lead_source" placeholder="Lead source" value="Dashboard">
+  <input type="date" name="follow_up_date">
+  <textarea name="notes" placeholder="Notes"></textarea>
+  <button type="submit">Add Booking</button>
+</form>
 
 <form class="filters" method="get">
   <input type="search" name="q" value="{{ filters.q }}" placeholder="Search name / phone / event">
@@ -218,6 +321,40 @@
       <p>No click data yet.</p>
     {% endfor %}
   </div>
+</div>
+
+<h2 class="section-title">{{ calendar_month_label }} Calendar</h2>
+<div class="table-wrap">
+  <table class="calendar">
+    <tr>
+      <th>Mon</th>
+      <th>Tue</th>
+      <th>Wed</th>
+      <th>Thu</th>
+      <th>Fri</th>
+      <th>Sat</th>
+      <th>Sun</th>
+    </tr>
+    {% for week in calendar_weeks %}
+    <tr>
+      {% for day in week %}
+        {% if day %}
+        <td class="{% if day.is_today %}today{% endif %}">
+          <span class="day-number">{{ day.date|date:"j" }}</span>
+          {% for item in day.items %}
+            <span class="calendar-item">
+              {{ item.name }}<br>
+              {{ item.event }} - {{ item.get_status_display }}
+            </span>
+          {% endfor %}
+        </td>
+        {% else %}
+        <td class="empty-day"></td>
+        {% endif %}
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </table>
 </div>
 
 <div class="table-wrap">
@@ -275,6 +412,11 @@
       </td>
       <td>{{ b.created_at }}</td>
       <td>
+        <div class="quick-actions">
+          <button type="button" onclick="sendWhatsApp('{{ b.phone|escapejs }}', '{{ b.name|escapejs }}', '{{ b.event|escapejs }}', '{{ b.event_date_value|default:b.event_date|escapejs }}', 'confirm')">Confirm</button>
+          <button type="button" onclick="sendWhatsApp('{{ b.phone|escapejs }}', '{{ b.name|escapejs }}', '{{ b.event|escapejs }}', '{{ b.event_date_value|default:b.event_date|escapejs }}', 'advance')">Advance</button>
+          <button type="button" onclick="sendWhatsApp('{{ b.phone|escapejs }}', '{{ b.name|escapejs }}', '{{ b.event|escapejs }}', '{{ b.event_date_value|default:b.event_date|escapejs }}', 'follow')">Follow Up</button>
+        </div>
         <button class="inline-save" type="button" data-booking-id="{{ b.id }}">Save</button>
       </td>
     </tr>
@@ -361,6 +503,43 @@ async function saveDetails(bookingId) {
     statusText.textContent = error.message || "Details save nahi hui. Please try again.";
   }
 }
+
+async function createBooking(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const statusText = document.getElementById("saveStatus");
+  statusText.textContent = "Adding booking...";
+
+  try {
+    const response = await fetch("/dashboard/bookings/create/", {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": getCookie("csrftoken")
+      },
+      body: new FormData(form)
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || "Booking add nahi hui.");
+    statusText.textContent = data.message;
+    window.setTimeout(() => window.location.reload(), 700);
+  } catch (error) {
+    statusText.textContent = error.message || "Booking add nahi hui. Please try again.";
+  }
+}
+
+function sendWhatsApp(phone, name, eventName, eventDate, type) {
+  const cleanPhone = String(phone || "").replace(/\D/g, "").slice(-10);
+  const messages = {
+    confirm: `Hello ${name}, your ${eventName} booking for ${eventDate} is confirmed. Thank you.`,
+    advance: `Hello ${name}, ${eventName} booking date ${eventDate} lock karne ke liye advance payment required hai. Please WhatsApp par payment details confirm karein.`,
+    follow: `Hello ${name}, ${eventName} booking/follow-up ke liye message kar raha hoon. Please apni availability confirm karein.`
+  };
+  const message = messages[type] || messages.follow;
+  window.open(`https://wa.me/91${cleanPhone}?text=${encodeURIComponent(message)}`, "_blank");
+}
+
+document.getElementById("addBookingForm").addEventListener("submit", createBooking);
 
 document.querySelectorAll(".status-select").forEach((select) => {
   select.dataset.previousValue = select.value;

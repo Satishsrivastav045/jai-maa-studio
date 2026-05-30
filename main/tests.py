@@ -225,6 +225,35 @@ class PublicApiTests(TestCase):
         booking.refresh_from_db()
         self.assertEqual(booking.status, Booking.STATUS_CONFIRMED)
 
+    def test_logged_in_admin_can_create_dashboard_booking(self):
+        User.objects.create_user(username="admin", password="pass12345", is_staff=True)
+        self.client.login(username="admin", password="pass12345")
+
+        response = self.client.post(
+            "/dashboard/bookings/create/",
+            {
+                "name": "Ravi",
+                "phone": "9936759702",
+                "event": "Engagement",
+                "event_date": "2026-12-05",
+                "total_amount": "20000",
+                "advance_amount": "5000",
+                "lead_source": "Call",
+                "follow_up_date": "2026-11-28",
+                "notes": "Manual dashboard entry",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        booking = Booking.objects.get(name="Ravi")
+        self.assertEqual(booking.event, "Engagement")
+        self.assertEqual(str(booking.event_date_value), "2026-12-05")
+        self.assertEqual(booking.total_amount, 20000)
+        self.assertEqual(booking.advance_amount, 5000)
+        self.assertEqual(booking.lead_source, "Call")
+        self.assertEqual(str(booking.follow_up_date), "2026-11-28")
+        self.assertEqual(response.json()["booking_id"], booking.id)
+
     def test_logged_in_admin_can_update_booking_details(self):
         User.objects.create_user(username="admin", password="pass12345", is_staff=True)
         self.client.login(username="admin", password="pass12345")

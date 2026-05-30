@@ -1,8 +1,9 @@
 import json
 import csv
 import re
+import calendar
 from io import StringIO
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from difflib import get_close_matches
 from urllib.parse import quote
@@ -374,6 +375,38 @@ def dashboard(request):
         )
         .order_by("event_date_value")[:12]
     )
+    month_start = follow_today.replace(day=1)
+    month_end = month_start.replace(day=calendar.monthrange(month_start.year, month_start.month)[1])
+    month_bookings = Booking.objects.filter(
+        event_date_value__gte=month_start,
+        event_date_value__lte=month_end,
+    ).exclude(status__in=[Booking.STATUS_CANCELLED, Booking.STATUS_LOST])
+    bookings_by_date = {}
+    for item in month_bookings:
+        bookings_by_date.setdefault(item.event_date_value, []).append(item)
+
+    calendar_weeks = []
+    week = []
+    for _ in range(month_start.weekday()):
+        week.append(None)
+
+    current_day = month_start
+    while current_day <= month_end:
+        week.append({
+            "date": current_day,
+            "items": bookings_by_date.get(current_day, []),
+            "is_today": current_day == follow_today,
+            "is_follow_up_due": current_day <= follow_today,
+        })
+        if len(week) == 7:
+            calendar_weeks.append(week)
+            week = []
+        current_day += timedelta(days=1)
+
+    if week:
+        while len(week) < 7:
+            week.append(None)
+        calendar_weeks.append(week)
 
     labels = [e['event'] for e in event_data]
     counts = [e['count'] for e in event_data]
@@ -389,6 +422,8 @@ def dashboard(request):
         "follow_up_count": follow_up_count,
         "click_stats": click_stats,
         "upcoming_dates": upcoming_dates,
+        "calendar_weeks": calendar_weeks,
+        "calendar_month_label": follow_today.strftime("%B %Y"),
         "labels": json.dumps(labels),
         "counts": json.dumps(counts),
         "status_choices": Booking.STATUS_CHOICES,
@@ -399,6 +434,48 @@ def dashboard(request):
             "date_from": request.GET.get("date_from", ""),
             "date_to": request.GET.get("date_to", ""),
         },
+    })
+
+
+@staff_member_required
+@require_POST
+def create_dashboard_booking(request):
+    name = request.POST.get("name", "").strip()
+    phone = request.POST.get("phone", "").strip()
+    event = request.POST.get("event", "").strip()
+    event_date = request.POST.get("event_date", "").strip()
+    total_amount = parse_decimal(request.POST.get("total_amount", "0"))
+    advance_amount = parse_decimal(request.POST.get("advance_amount", "0"))
+    lead_source = request.POST.get("lead_source", "Dashboard").strip()
+    follow_up_date = parse_event_date(request.POST.get("follow_up_date", ""))
+    notes = request.POST.get("notes", "").strip()
+
+    if not name or not phone or not event or not event_date:
+        return JsonResponse({"status": "error", "message": "Name, phone, event and event date are required."}, status=400)
+
+    if not phone.isdigit() or len(phone) < 10 or len(phone) > 15:
+        return JsonResponse({"status": "error", "message": "Invalid phone number."}, status=400)
+
+    if total_amount is None or advance_amount is None:
+        return JsonResponse({"status": "error", "message": "Invalid amount."}, status=400)
+
+    booking = Booking.objects.create(
+        name=name[:100],
+        phone=phone,
+        event=event[:100],
+        event_date=event_date[:100],
+        event_date_value=parse_event_date(event_date),
+        total_amount=total_amount,
+        advance_amount=advance_amount,
+        lead_source=lead_source[:100] or "Dashboard",
+        follow_up_date=follow_up_date,
+        notes=notes[:1000],
+    )
+
+    return JsonResponse({
+        "status": "success",
+        "message": f"Booking #{booking.id} added.",
+        "booking_id": booking.id,
     })
 
 
