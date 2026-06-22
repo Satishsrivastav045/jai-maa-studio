@@ -2098,10 +2098,6 @@ function showGalleryVideos() {
   videoBtn?.classList.add("active");
 }
 
-
-// =======================
-// 🔥 SERVICE CLICK → BACKEND DATA LOAD (FIXED)
-// =======================
 function loadCategory(category) {
   showGalleryPhotos();
   fetch(`/category/${category}/`)
@@ -2119,7 +2115,7 @@ function loadCategory(category) {
       }
 
       data.forEach(item => {
-        // 🔥 FIX: image key use karo (url nahi)
+        
         if (item.image) {
           let img = document.createElement("img");
           img.src = item.image;
@@ -2127,7 +2123,6 @@ function loadCategory(category) {
           gallery.appendChild(img);
         }
 
-        // 🔥 VIDEO SUPPORT
         if (item.video) {
           let video = document.createElement("video");
           video.src = item.video;
@@ -2240,3 +2235,6 @@ function trackLeadClick(type) {
 </script>
 </body>
 </html>
+
+
+
