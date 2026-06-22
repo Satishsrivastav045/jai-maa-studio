@@ -14,6 +14,7 @@ from django.core.cache import cache
 from django.core.management import call_command
 from django.core.mail import send_mail
 from django.db.models import Count, Q, Sum
+from django.db.utils import DatabaseError
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.timezone import now
@@ -197,13 +198,18 @@ def get_studio_reply(user_msg):
 # =========================
 @ensure_csrf_cookie
 def home(request):
-    images = (
-        Gallery.objects.filter(image__isnull=False)
-        .exclude(image="")
-        .order_by('-id')[:8]
-    )
-    testimonials = Testimonial.objects.filter(approved=True)
-    packages = Package.objects.filter(active=True)
+    try:
+        images = list(
+            Gallery.objects.filter(image__isnull=False)
+            .exclude(image="")
+            .order_by('-id')[:8]
+        )
+        testimonials = list(Testimonial.objects.filter(approved=True))
+        packages = list(Package.objects.filter(active=True))
+    except DatabaseError:
+        images = []
+        testimonials = []
+        packages = []
 
     return render(request, "main/home.html", {
         "images": images,
