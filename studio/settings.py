@@ -175,7 +175,7 @@ USE_CLOUDINARY = bool(os.getenv("CLOUDINARY_CLOUD_NAME"))
 
 STORAGES = {
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
 }
 
